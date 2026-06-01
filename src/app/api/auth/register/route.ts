@@ -1,0 +1,119 @@
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/db';
+import { hashPassword, setSessionCookie } from '@/lib/auth';
+import { Role } from '@prisma/client';
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      email,
+      password,
+      name,
+      role,
+      charityName,
+      licenseNumber,
+      charityPhone,
+      charityDescription,
+    } = body;
+
+    if (!email || !password || !name || !role) {
+      return NextResponse.json({ error: 'Missing required registration details' }, { status: 400 });
+    }
+
+    // Prevent public registration of admin roles
+    if (role === Role.ADMIN || role === Role.SUPER_ADMIN) {
+      return NextResponse.json({ error: 'Forbidden role selection' }, { status: 403 });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return NextResponse.json({ error: 'Email address is already in use' }, { status: 400 });
+    }
+
+    const passwordHash = await hashPassword(password);
+
+    // Create user and profile in a transaction
+    const newUser = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email,
+          passwordHash,
+          role: role as Role,
+          name,
+        },
+      });
+
+      if (role === Role.DONOR) {
+        await tx.donorProfile.create({
+          data: {
+            userId: user.id,
+            displayName: name,
+            bio: 'Supporting local families.',
+          },
+        });
+      } else if (role === Role.CHARITY_ADMIN) {
+        if (!charityName || !licenseNumber || !charityPhone) {
+          throw new Error('Charity name, license number, and phone number are required.');
+        }
+
+        const existingLic = await tx.charityProfile.findUnique({
+          where: { licenseNumber },
+        });
+        if (existingLic) {
+          throw new Error('A charity license with this number has already registered.');
+        }
+
+        await tx.charityProfile.create({
+          data: {
+            userId: user.id,
+            charityName,
+            licenseNumber,
+            description: charityDescription || 'Charity organization registered on KhairLink.',
+            phone: charityPhone,
+            isApproved: false, // Requires Admin verification
+          },
+        });
+      }
+
+      return user;
+    });
+
+    // Auto-login setting session cookies
+    await setSessionCookie({
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role,
+      name: newUser.name,
+    });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: newUser.id,
+        action: 'USER_REGISTER',
+        details: `Registered account: ${newUser.email} (${newUser.role})`,
+      },
+    });
+
+    let redirectUrl = '/';
+    if (newUser.role === Role.DONOR) {
+      redirectUrl = '/donor/dashboard';
+    } else if (newUser.role === Role.CHARITY_ADMIN) {
+      redirectUrl = '/charity/dashboard';
+    } else if (newUser.role === Role.BENEFICIARY) {
+      redirectUrl = '/beneficiary/onboarding';
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: { id: newUser.id, name: newUser.name, role: newUser.role },
+      redirectUrl,
+    });
+  } catch (error: any) {
+    console.error('Registration API error:', error);
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}

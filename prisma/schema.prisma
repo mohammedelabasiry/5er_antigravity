@@ -1,0 +1,318 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  BENEFICIARY
+  DONOR
+  CHARITY_ADMIN
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum BeneficiaryStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  BLOCKED
+  FULLY_SUPPORTED_THIS_MONTH
+  HIDDEN
+}
+
+enum DocumentType {
+  NATIONAL_ID
+  BIRTH_CERTIFICATE
+  CHILD_BIRTH_CERTIFICATE
+  PROOF_OF_ADDRESS
+  MEDICAL_DOCUMENT
+  INCOME_PROOF
+  OTHER
+}
+
+enum ContributionStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+  REJECTED
+}
+
+enum ContributionType {
+  CASH
+  RESOURCE
+}
+
+enum DeliveryStatus {
+  PENDING
+  EN_ROUTE
+  DELIVERED
+  FAILED
+}
+
+model User {
+  id           String      @id @default(uuid())
+  email        String      @unique
+  passwordHash String
+  role         Role
+  name         String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  isBlocked    Boolean     @default(false)
+  
+  // Relations
+  beneficiaryProfile BeneficiaryProfile?
+  donorProfile       DonorProfile?
+  charityProfile     CharityProfile?
+  auditLogs          AuditLog[]
+  notifications      Notification[]
+}
+
+model BeneficiaryProfile {
+  id                    String            @id @default(uuid())
+  userId                String            @unique
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Public/Anonymized Fields
+  code                  String            @unique // e.g. KH-2026-00041
+  displayName           String            // e.g. "Family Support Case"
+  category              String            // A, B, C, D
+  monthlySupportCap     Float             // Target support in EGP
+  monthlyReceivedAmount Float             @default(0.0) // Cached value (resets or synced)
+  caseSummary           String            // Respectful public description
+  areaName              String            // General neighborhood/city
+  latitude              Float             // Approximate location for map discovery
+  longitude             Float             // Approximate location for map discovery
+  
+  // Sensitive/Private Fields (Visible to Admins only)
+  fullName              String
+  nationalId            String            @unique
+  address               String            // Exact address
+  phone                 String
+  monthlyIncome         Float             @default(0.0)
+  familyMembersCount    Int               @default(1)
+  childrenCount         Int               @default(0)
+  employmentStatus      String            // e.g., "Unemployed", "Part-time", "Full-time"
+  medicalConditions     String            @default("") // Details of chronic illnesses
+  housingStatus         String            // e.g., "Rented", "Owned", "Shared"
+  debtObligations       Float             @default(0.0)
+  urgentNeeds           String            @default("")
+  existingSupport       Float             @default(0.0) // Support received from other sources
+  
+  // Governance State
+  verificationStatus    String            @default("PENDING") // PENDING, APPROVED, REJECTED
+  status                BeneficiaryStatus @default(PENDING_REVIEW)
+  evaluationScore       Float             @default(0)
+  isEligibleOverride    Boolean           @default(false) // If true, can bypass cap limits
+  
+  // Relations
+  documents             BeneficiaryDocument[]
+  evaluations           Evaluation[]
+  contributions         Contribution[]
+  resourceDistributions ResourceDistribution[]
+  conversations         ChatConversation[]
+  adminNotes            AdminNote[]
+  monthlyCycles         MonthlySupportCycle[]
+  
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model DonorProfile {
+  id          String             @id @default(uuid())
+  userId      String             @unique
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  phone       String?
+  bio         String?
+  
+  // Relations
+  contributions         Contribution[]
+  resourceDistributions ResourceDistribution[]
+  conversations         ChatConversation[]
+  
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+}
+
+model CharityProfile {
+  id            String             @id @default(uuid())
+  userId        String             @unique
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  charityName   String
+  licenseNumber String             @unique
+  description   String
+  website       String?
+  phone         String
+  isApproved    Boolean            @default(false)
+  
+  // Relations
+  contributions         Contribution[]
+  resourceDistributions ResourceDistribution[]
+  conversations         ChatConversation[]
+  
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+model BeneficiaryDocument {
+  id                   String             @id @default(uuid())
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  documentType         DocumentType
+  fileUrl              String             // Path on local disk (protected folder)
+  fileName             String
+  verified             Boolean            @default(false)
+  verifiedAt           DateTime?
+  verifiedById         String?            // User ID of verifying admin
+  
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model Evaluation {
+  id                   String             @id @default(uuid())
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  score                Float
+  recommendedCategory  String             // A, B, C, D
+  recommendedAmount    Float
+  adminNotes           String?
+  
+  createdAt            DateTime           @default(now())
+}
+
+model MonthlySupportCycle {
+  id                   String             @id @default(uuid())
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  year                 Int
+  month                Int
+  targetAmount         Float
+  receivedAmount       Float              @default(0)
+  status               String             // IN_PROGRESS, COMPLETED, OVERRIDDEN
+  
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@unique([beneficiaryProfileId, year, month])
+}
+
+model Contribution {
+  id                   String             @id @default(uuid())
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  
+  // Contributor details (either donor or charity or manual admin entry)
+  donorProfileId       String?
+  donorProfile         DonorProfile?      @relation(fields: [donorProfileId], references: [id])
+  charityProfileId     String?
+  charityProfile       CharityProfile?    @relation(fields: [charityProfileId], references: [id])
+  
+  amount               Float              // Cash or estimated value of resources
+  type                 ContributionType   @default(CASH)
+  status               ContributionStatus @default(PENDING)
+  notes                String?
+  
+  // Resource details if type is RESOURCE
+  resourceType         String?            // e.g. "Food Box", "Medicine"
+  resourceQuantity     Int?
+  
+  // Meta
+  createdById          String?            // Admin user id if manually recorded
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  
+  // Relations
+  resourceDistribution ResourceDistribution?
+}
+
+model ResourceDistribution {
+  id                   String             @id @default(uuid())
+  contributionId       String?            @unique
+  contribution         Contribution?      @relation(fields: [contributionId], references: [id], onDelete: SetNull)
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  
+  charityProfileId     String?
+  charityProfile       CharityProfile?    @relation(fields: [charityProfileId], references: [id])
+  donorProfileId       String?
+  donorProfile         DonorProfile?      @relation(fields: [donorProfileId], references: [id])
+  
+  resourceType         String
+  quantity             Int
+  estimatedValue       Float
+  deliveryStatus       DeliveryStatus     @default(PENDING)
+  date                 DateTime           @default(now())
+  notes                String?
+  proofOfDeliveryUrl   String?
+  
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model ChatConversation {
+  id                   String             @id @default(uuid())
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  donorProfileId       String?
+  donorProfile         DonorProfile?      @relation(fields: [donorProfileId], references: [id])
+  charityProfileId     String?
+  charityProfile       CharityProfile?    @relation(fields: [charityProfileId], references: [id])
+  
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  
+  // Relations
+  messages             ChatMessage[]
+
+  @@unique([beneficiaryProfileId, donorProfileId])
+  @@unique([beneficiaryProfileId, charityProfileId])
+}
+
+model ChatMessage {
+  id             String           @id @default(uuid())
+  conversationId String
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String           // User ID of the sender
+  senderName     String           // display name
+  content        String
+  isRead         Boolean          @default(false)
+  moderationFlag Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String   // e.g. "BENEFICIARY_APPROVED", "DONATION_CREATED"
+  details   String   // JSON or text details
+  ipAddress String?
+  createdAt DateTime @default(now())
+}
+
+model AdminNote {
+  id                   String             @id @default(uuid())
+  beneficiaryProfileId String
+  beneficiaryProfile   BeneficiaryProfile @relation(fields: [beneficiaryProfileId], references: [id], onDelete: Cascade)
+  adminId              String
+  content              String
+  createdAt            DateTime           @default(now())
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String   // e.g. "SUPPORT_CAP", "DOCUMENT_VERIFIED", "CHAT"
+  createdAt DateTime @default(now())
+}
