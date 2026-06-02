@@ -37,6 +37,8 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  const role = (session?.role as string) || '';
+
   // 1. If not logged in and trying to access a protected route
   if (!session) {
     if (isAuthRoute || pathname === '/') {
@@ -48,13 +50,10 @@ export async function middleware(request: NextRequest) {
 
   // 2. If logged in and trying to access login/register
   if (isAuthRoute) {
-    // Redirect to their default dashboard
-    return redirectToDashboard(session.role, request.url);
+    return redirectToDashboard(role, request.url);
   }
 
   // 3. Role-based Route Guarding
-  const role = session.role;
-
   if (pathname.startsWith('/admin') && role !== 'ADMIN' && role !== 'SUPER_ADMIN') {
     return redirectToDashboard(role, request.url);
   }

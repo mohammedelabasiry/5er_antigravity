@@ -3,6 +3,93 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { Role } from '@prisma/client';
 
+export async function GET() {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let conversations: any[] = [];
+
+    if (session.role === Role.BENEFICIARY) {
+      const beneficiary = await prisma.beneficiaryProfile.findUnique({
+        where: { userId: session.userId },
+      });
+      if (!beneficiary) return NextResponse.json({ error: 'Beneficiary profile not found' }, { status: 404 });
+
+      conversations = await prisma.chatConversation.findMany({
+        where: { beneficiaryProfileId: beneficiary.id },
+        include: {
+          donorProfile: { select: { displayName: true } },
+          charityProfile: { select: { charityName: true } },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+    } else if (session.role === Role.DONOR) {
+      const donor = await prisma.donorProfile.findUnique({
+        where: { userId: session.userId },
+      });
+      if (!donor) return NextResponse.json({ error: 'Donor profile not found' }, { status: 404 });
+
+      conversations = await prisma.chatConversation.findMany({
+        where: { donorProfileId: donor.id },
+        include: {
+          beneficiaryProfile: {
+            select: { code: true, displayName: true, category: true },
+          },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+    } else if (session.role === Role.CHARITY_ADMIN) {
+      const charity = await prisma.charityProfile.findUnique({
+        where: { userId: session.userId },
+      });
+      if (!charity) return NextResponse.json({ error: 'Charity profile not found' }, { status: 404 });
+
+      conversations = await prisma.chatConversation.findMany({
+        where: { charityProfileId: charity.id },
+        include: {
+          beneficiaryProfile: {
+            select: { code: true, displayName: true, category: true },
+          },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+    } else if (session.role === Role.ADMIN || session.role === Role.SUPER_ADMIN) {
+      conversations = await prisma.chatConversation.findMany({
+        include: {
+          beneficiaryProfile: { select: { code: true, displayName: true } },
+          donorProfile: { select: { displayName: true } },
+          charityProfile: { select: { charityName: true } },
+          messages: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+    }
+
+    return NextResponse.json(conversations);
+  } catch (error: any) {
+    console.error('Get conversations API error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getSession();

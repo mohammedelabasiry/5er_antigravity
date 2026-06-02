@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FileText, ChevronRight, ChevronLeft, ShieldCheck, Heart, User, Sparkles, Upload, Trash2, CheckCircle2 } from 'lucide-react';
+import { FileText, ChevronRight, ChevronLeft, ShieldCheck, Heart, User, Sparkles, Upload, Trash2, CheckCircle2, ShieldAlert } from 'lucide-react';
 
 const AREAS = [
   { name: 'Downtown Cairo', lat: 30.0480, lng: 31.2330 },
@@ -291,7 +291,7 @@ export default function OnboardingForm() {
               <User className="text-emerald-600 w-5 h-5" />
               Step 2: Private Verification Details
             </h3>
-            <p className="text-xs text-rose-600 leading-relaxed font-semibold bg-rose-50 p-3 rounded-xl border border-rose-100">
+            <p className="text-xs text-rose-600 leading-relaxed font-semibold bg-rose-55 p-3 rounded-xl border border-rose-100">
               IMPORTANT: The details in this section are highly confidential and will only be visible to administrators for validation.
             </p>
 
@@ -546,9 +546,9 @@ export default function OnboardingForm() {
                     <div>
                       {uploadedFile ? (
                         <button
-                          type="button"
-                          onClick={() => handleRemoveDoc(docDef.type)}
-                          className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-100 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors"
+                           type="button"
+                           onClick={() => handleRemoveDoc(docDef.type)}
+                           className="px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-100 rounded-xl text-xs font-semibold flex items-center gap-1 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           Remove
