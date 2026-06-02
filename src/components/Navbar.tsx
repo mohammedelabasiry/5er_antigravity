@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { HeartHandshake, Bell, Menu, X, User, LogOut, MessageSquare } from 'lucide-react';
+import { HeartHandshake, Bell, Menu, X, User, LogOut, MessageSquare, Globe } from 'lucide-react';
+import { useTranslation } from '@/lib/LanguageContext';
 
 interface NavbarProps {
   user: {
@@ -18,6 +19,7 @@ export default function Navbar({ user }: NavbarProps) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const { language, toggleLanguage, t } = useTranslation();
 
   const handleLogout = async () => {
     try {
@@ -58,7 +60,7 @@ export default function Navbar({ user }: NavbarProps) {
                 KhairLink
               </span>
               <span className="hidden sm:inline text-xs font-semibold px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-100">
-                Governance
+                {t('navGovernance')}
               </span>
             </Link>
           </div>
@@ -75,7 +77,7 @@ export default function Navbar({ user }: NavbarProps) {
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  Dashboard
+                  {t('navDashboard')}
                 </Link>
 
                 {user.role === 'DONOR' && (
@@ -88,7 +90,7 @@ export default function Navbar({ user }: NavbarProps) {
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      Map Discovery
+                      {t('navMapDiscovery')}
                     </Link>
                   </>
                 )}
@@ -103,7 +105,7 @@ export default function Navbar({ user }: NavbarProps) {
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      Beneficiary Search
+                      {t('navBeneficiarySearch')}
                     </Link>
                   </>
                 )}
@@ -143,7 +145,7 @@ export default function Navbar({ user }: NavbarProps) {
                   }`}
                 >
                   <MessageSquare className="w-4 h-4" />
-                  Messages
+                  {t('navMessages')}
                 </Link>
 
                 <Link
@@ -154,7 +156,7 @@ export default function Navbar({ user }: NavbarProps) {
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  History
+                  {t('navHistory')}
                 </Link>
 
                 <Link
@@ -165,7 +167,7 @@ export default function Navbar({ user }: NavbarProps) {
                       : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  Resources
+                  {t('navResources')}
                 </Link>
 
                 {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'CHARITY_ADMIN') && (
@@ -177,15 +179,25 @@ export default function Navbar({ user }: NavbarProps) {
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
-                    Audit & Reports
+                    {t('navAuditReports')}
                   </Link>
                 )}
               </>
             )}
           </div>
 
-          {/* Right Section: User details or Sign In */}
+          {/* Right Section: User details, language switch, or Sign In */}
           <div className="flex items-center gap-3">
+            {/* Language Switcher */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 transition-colors"
+              title="Switch Language"
+            >
+              <Globe className="w-3.5 h-3.5 text-slate-500" />
+              <span>{language === 'en' ? 'العربية' : 'English'}</span>
+            </button>
+
             {user ? (
               <div className="flex items-center gap-2 relative">
                 {/* Notifications Icon */}
@@ -223,7 +235,7 @@ export default function Navbar({ user }: NavbarProps) {
                         className="w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
                       >
                         <LogOut className="w-4 h-4" />
-                        Log out
+                        {t('navLogout')}
                       </button>
                     </div>
                   )}
@@ -235,13 +247,13 @@ export default function Navbar({ user }: NavbarProps) {
                   href="/login"
                   className="text-slate-600 hover:text-slate-900 text-sm font-semibold px-4 py-2"
                 >
-                  Log in
+                  {t('navLogin')}
                 </Link>
                 <Link
                   href="/register"
                   className="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white shadow-md shadow-emerald-100 hover:shadow-lg hover:shadow-emerald-200 rounded-xl text-sm font-semibold px-5 py-2.5 transition-all duration-300 transform hover:-translate-y-0.5"
                 >
-                  Sign up
+                  {t('navSignup')}
                 </Link>
               </div>
             )}
@@ -268,7 +280,7 @@ export default function Navbar({ user }: NavbarProps) {
               className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Dashboard
+              {t('navDashboard')}
             </Link>
 
             {user.role === 'DONOR' && (
@@ -277,7 +289,7 @@ export default function Navbar({ user }: NavbarProps) {
                 className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Map Discovery
+                {t('navMapDiscovery')}
               </Link>
             )}
 
@@ -287,7 +299,7 @@ export default function Navbar({ user }: NavbarProps) {
                 className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Beneficiary Search
+                {t('navBeneficiarySearch')}
               </Link>
             )}
 
@@ -296,7 +308,7 @@ export default function Navbar({ user }: NavbarProps) {
               className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Messages
+              {t('navMessages')}
             </Link>
 
             <Link
@@ -304,7 +316,7 @@ export default function Navbar({ user }: NavbarProps) {
               className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
               onClick={() => setMobileMenuOpen(false)}
             >
-              History
+              {t('navHistory')}
             </Link>
 
             <Link
@@ -312,7 +324,7 @@ export default function Navbar({ user }: NavbarProps) {
               className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
               onClick={() => setMobileMenuOpen(false)}
             >
-              Resources
+              {t('navResources')}
             </Link>
 
             {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'CHARITY_ADMIN') && (
@@ -321,7 +333,7 @@ export default function Navbar({ user }: NavbarProps) {
                 className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Audit & Reports
+                {t('navAuditReports')}
               </Link>
             )}
 
@@ -332,7 +344,7 @@ export default function Navbar({ user }: NavbarProps) {
               }}
               className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-rose-600 hover:bg-rose-50"
             >
-              Log out
+              {t('navLogout')}
             </button>
           </div>
         </div>
