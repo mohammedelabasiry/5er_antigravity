@@ -1,7 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { HeartHandshake } from 'lucide-react';
+import { useTranslation } from '@/lib/LanguageContext';
 
 export default function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-slate-900 text-slate-400 py-12 mt-auto border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -13,15 +18,15 @@ export default function Footer() {
             <span className="text-lg font-bold tracking-tight text-white">KhairLink</span>
           </div>
           <div className="flex gap-6 text-sm">
-            <Link href="/" className="hover:text-white transition-colors">Home</Link>
-            <Link href="#" className="hover:text-white transition-colors">About Governance</Link>
-            <Link href="#" className="hover:text-white transition-colors">Privacy Principles</Link>
-            <Link href="#" className="hover:text-white transition-colors">Terms of Service</Link>
+            <Link href="/" className="hover:text-white transition-colors">{t('footerHome')}</Link>
+            <Link href="#" className="hover:text-white transition-colors">{t('footerAbout')}</Link>
+            <Link href="#" className="hover:text-white transition-colors">{t('footerPrivacy')}</Link>
+            <Link href="#" className="hover:text-white transition-colors">{t('footerTerms')}</Link>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-8 text-xs">
-          <p>&copy; {new Date().getFullYear()} KhairLink Sadaqah Governance. Ensuring aid reaches the truly eligible, with dignity.</p>
-          <p className="text-slate-500">Auditable Log Layer v1.0.0</p>
+          <p>&copy; {new Date().getFullYear()} {t('footerCopyright')}</p>
+          <p className="text-slate-500">{t('footerVersion')}</p>
         </div>
       </div>
     </footer>

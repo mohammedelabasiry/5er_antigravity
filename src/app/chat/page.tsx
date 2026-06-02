@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/LanguageContext';
 import { 
   MessageSquare, 
   Send, 
@@ -50,6 +51,7 @@ interface Message {
 export default function ChatPage() {
   const router = useRouter();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { t, language, isRtl } = useTranslation();
   
   // App state
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -69,17 +71,12 @@ export default function ChatPage() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch('/api/auth/login'); // Or check endpoint
-        // To be safe, we fetch user data from a public endpoint or try checking login status
-        // A simple way to get session is calling GET /api/auth/login or similar, but let's just query db/session
-        // Let's assume we can fetch it, if not, redirect to login
         const response = await fetch('/api/beneficiary/onboarding'); // Let's check session status
         if (response.status === 401) {
           router.push('/login');
           return;
         }
         
-        // Let's fetch conversations
         loadConversations();
       } catch (err) {
         console.error(err);
@@ -103,7 +100,7 @@ export default function ChatPage() {
       }
     } catch (err: any) {
       console.error(err);
-      setErrorMsg('Failed to load conversations');
+      setErrorMsg(isRtl ? 'فشل تحميل المحادثات' : 'Failed to load conversations');
     } finally {
       setLoadingConversations(false);
     }
@@ -131,7 +128,7 @@ export default function ChatPage() {
       } catch (err: any) {
         console.error(err);
         if (isSubscribed) {
-          setErrorMsg('Could not retrieve messages');
+          setErrorMsg(isRtl ? 'تعذر استرداد الرسائل' : 'Could not retrieve messages');
         }
       } finally {
         if (isSubscribed) setLoadingMessages(false);
@@ -207,7 +204,7 @@ export default function ChatPage() {
         );
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error occurred while sending');
+      setErrorMsg(err.message || (isRtl ? 'حدث خطأ أثناء الإرسال' : 'Error occurred while sending'));
     } finally {
       setSending(false);
     }
@@ -219,37 +216,43 @@ export default function ChatPage() {
       // Current user is donor or charity
       return {
         title: conv.beneficiaryProfile.displayName,
-        subtitle: `Case: ${conv.beneficiaryProfile.code} (Cat ${conv.beneficiaryProfile.category})`,
-        badge: 'Beneficiary'
+        subtitle: isRtl 
+          ? `حالة: ${conv.beneficiaryProfile.code} (فئة ${conv.beneficiaryProfile.category})`
+          : `Case: ${conv.beneficiaryProfile.code} (Cat ${conv.beneficiaryProfile.category})`,
+        badge: isRtl ? 'مستفيد' : 'Beneficiary'
       };
     } else {
       // Current user is beneficiary
       if (conv.donorProfile) {
         return {
-          title: conv.donorProfile.displayName,
-          subtitle: 'Private Supporter',
-          badge: 'Donor'
+          title: isRtl ? 'فاعل خير' : conv.donorProfile.displayName,
+          subtitle: isRtl ? 'داعم خاص' : 'Private Supporter',
+          badge: isRtl ? 'متبرع' : 'Donor'
         };
       } else if (conv.charityProfile) {
         return {
           title: conv.charityProfile.charityName,
-          subtitle: 'Charity Representative',
-          badge: 'Charity'
+          subtitle: isRtl ? 'ممثل الجمعية الخيرية' : 'Charity Representative',
+          badge: isRtl ? 'جمعية' : 'Charity'
         };
       }
     }
-    return { title: 'Direct Chat', subtitle: 'KhairLink User', badge: 'User' };
+    return { 
+      title: isRtl ? 'محادثة مباشرة' : 'Direct Chat', 
+      subtitle: isRtl ? 'مستخدم خير لينك' : 'KhairLink User', 
+      badge: isRtl ? 'مستخدم' : 'User' 
+    };
   };
 
   return (
-    <div className="flex-1 bg-slate-50 flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden text-left">
+    <div className={`flex-1 bg-slate-50 flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden ${isRtl ? 'text-right' : 'text-left'}`}>
       
       {/* 1. Conversations List Panel */}
-      <div className={`w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col h-full ${selectedConversation ? 'hidden md:flex' : 'flex'}`}>
-        <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-          <div className="flex items-center gap-2">
+      <div className={`w-full md:w-80 lg:w-96 bg-white border-r border-slate-200 flex flex-col h-full ${selectedConversation ? 'hidden md:flex' : 'flex'} ${isRtl ? 'border-r-0 border-l' : ''}`}>
+        <div className={`p-4 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+          <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <MessageSquare className="w-5 h-5 text-emerald-600" />
-            <h2 className="font-extrabold text-slate-800 text-sm sm:text-base">Support Channels</h2>
+            <h2 className="font-extrabold text-slate-800 text-sm sm:text-base">{t('supportChannels')}</h2>
           </div>
         </div>
 
@@ -257,22 +260,24 @@ export default function ChatPage() {
           {loadingConversations ? (
             <div className="text-center py-12 text-slate-400 space-y-2">
               <div className="animate-spin inline-block w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full"></div>
-              <p className="text-xs">Loading conversations...</p>
+              <p className="text-xs">{t('loading')}</p>
             </div>
           ) : conversations.length === 0 ? (
             <div className="text-center py-12 text-slate-400 text-xs px-4">
               <MessageSquare className="w-10 h-10 text-slate-200 mx-auto mb-2" />
-              <p className="font-bold mb-1">No chats active</p>
+              <p className="font-bold mb-1">{t('noChats')}</p>
               <p className="text-[10px] text-slate-400 leading-normal">
-                Donors or Charities can initiate secure chats from any beneficiary's public profile page.
+                {isRtl 
+                  ? 'يمكن للمتبرعين أو الجمعيات بدء محادثات آمنة من صفحة الملف الشخصي العام لأي مستفيد.'
+                  : "Donors or Charities can initiate secure chats from any beneficiary's public profile page."}
               </p>
             </div>
           ) : (
             conversations.map((conv) => {
               const label = getConversationLabel(conv);
               const isSelected = selectedConversation?.id === conv.id;
-              const lastMsg = conv.messages?.[0]?.content || 'Click to view conversation';
-              const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString() : '';
+              const lastMsg = conv.messages?.[0]?.content || (isRtl ? 'انقر لعرض المحادثة' : 'Click to view conversation');
+              const dateStr = conv.updatedAt ? new Date(conv.updatedAt).toLocaleDateString(language === 'ar' ? 'ar-EG' : undefined) : '';
 
               return (
                 <div
@@ -282,9 +287,9 @@ export default function ChatPage() {
                     isSelected
                       ? 'border-emerald-500 bg-emerald-50/20 shadow-sm ring-1 ring-emerald-500'
                       : 'border-slate-100 bg-white'
-                  }`}
+                  } ${isRtl ? 'text-right' : 'text-left'}`}
                 >
-                  <div className="flex justify-between items-start gap-1">
+                  <div className={`flex justify-between items-start gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
                     <div className="space-y-0.5">
                       <h4 className="font-bold text-slate-800 text-xs line-clamp-1">{label.title}</h4>
                       <p className="text-[10px] text-slate-400 font-medium">{label.subtitle}</p>
@@ -306,20 +311,20 @@ export default function ChatPage() {
         {selectedConversation ? (
           <>
             {/* Thread Header */}
-            <div className="p-4 bg-white border-b border-slate-200 flex items-center gap-3">
+            <div className={`p-4 bg-white border-b border-slate-200 flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <button
                 onClick={() => setSelectedConversation(null)}
-                className="md:hidden p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg"
+                className="md:hidden p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-650 rounded-lg"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
               </button>
               
               <div className="flex-1">
-                <div className="flex items-center gap-2">
+                <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <h3 className="font-extrabold text-slate-800 text-sm">
                     {getConversationLabel(selectedConversation).title}
                   </h3>
-                  <span className="px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-600 font-bold text-[8px] rounded-md uppercase">
+                  <span className="px-2 py-0.5 bg-slate-105 border border-slate-200 text-slate-600 font-bold text-[8px] rounded-md uppercase">
                     {getConversationLabel(selectedConversation).badge}
                   </span>
                 </div>
@@ -328,23 +333,31 @@ export default function ChatPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100">
+              <div className={`flex items-center gap-1.5 text-xs text-emerald-600 font-bold bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-100 ${isRtl ? 'flex-row-reverse' : ''}`}>
                 <Lock className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Secure Shield Enabled</span>
+                <span className="hidden sm:inline">{t('secureShield')}</span>
               </div>
             </div>
 
             {/* Shield Alert Notice */}
-            <div className="bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-start gap-2.5 text-[10px] text-amber-800">
+            <div className={`bg-amber-50 border-b border-amber-100 px-4 py-2 flex items-start gap-2.5 text-[10px] text-amber-800 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold">Privacy Governance:</span> Direct contact details (phones, emails, IDs) are programmatically redacted/blocked. Use this chat solely to coordinate logistical assistance, verification, or questions.
+                {isRtl ? (
+                  <>
+                    <span className="font-bold">حوكمة الخصوصية:</span> يتم حظر وحجب أرقام الهواتف أو البريد الإلكتروني أو الهوية القومية برمجياً. استخدم هذه المحادثة فقط لتنسيق المساعدات اللوجستية والتحقق والاستفسارات.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-bold">Privacy Governance:</span> Direct contact details (phones, emails, IDs) are programmatically redacted/blocked. Use this chat solely to coordinate logistical assistance, verification, or questions.
+                  </>
+                )}
               </div>
             </div>
 
             {/* Error Message banner */}
             {errorMsg && (
-              <div className="bg-rose-50 border-b border-rose-100 px-4 py-2 text-rose-700 text-xs font-semibold">
+              <div className="bg-rose-50 border-b border-rose-100 px-4 py-2 text-rose-750 text-xs font-semibold">
                 {errorMsg}
               </div>
             )}
@@ -362,30 +375,29 @@ export default function ChatPage() {
               {loadingMessages ? (
                 <div className="text-center py-12 text-slate-400">
                   <div className="animate-spin inline-block w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full mb-1"></div>
-                  <p className="text-xs">Fetching message logs...</p>
+                  <p className="text-xs">{isRtl ? 'جاري تحميل الرسائل...' : 'Fetching message logs...'}</p>
                 </div>
               ) : (
                 messages.map((msg) => {
                   const isSystem = msg.senderId === 'SYSTEM';
-                  const isMe = msg.senderId === currentUser?.id; // Fallback to sender name check if session not parsed
-
+                  const alignment = isSystem 
+                    ? 'justify-center' 
+                    : (msg.senderName === 'KhairLink Safety Bot' ? 'justify-center' : (isRtl ? 'justify-end' : 'justify-start'));
+                  
                   if (isSystem) {
                     return (
                       <div key={msg.id} className="flex justify-center my-2">
                         <div className="bg-slate-100 border border-slate-200 rounded-2xl p-3 max-w-md text-[10px] text-slate-500 font-medium text-center space-y-1">
-                          <p className="font-bold text-slate-600 text-left flex items-center justify-center gap-1">
+                          <p className={`font-bold text-slate-650 flex items-center justify-center gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
                             <Lock className="w-3 h-3 text-emerald-600" />
                             {msg.senderName}
                           </p>
-                          <p className="text-left">{msg.content}</p>
+                          <p className="text-center">{msg.content}</p>
                         </div>
                       </div>
                     );
                   }
 
-                  // Non-system messages
-                  const alignment = msg.senderName === 'KhairLink Safety Bot' ? 'justify-center' : 'justify-start';
-                  
                   return (
                     <div
                       key={msg.id}
@@ -395,8 +407,8 @@ export default function ChatPage() {
                         msg.senderName === 'KhairLink Safety Bot'
                           ? 'bg-slate-100 border-slate-200 text-slate-500 text-[10px]'
                           : 'bg-white border-slate-100 text-slate-800'
-                      }`}>
-                        <div className="flex justify-between items-center gap-4">
+                      } ${isRtl ? 'text-right' : 'text-left'}`}>
+                        <div className={`flex justify-between items-center gap-4 ${isRtl ? 'flex-row-reverse' : ''}`}>
                           <span className="font-bold text-[9px] text-slate-500">
                             {msg.senderName}
                           </span>
@@ -414,10 +426,10 @@ export default function ChatPage() {
             </div>
 
             {/* Input Footer */}
-            <form onSubmit={handleSendMessage} className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+            <form onSubmit={handleSendMessage} className={`p-3 bg-white border-t border-slate-200 flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <input
                 type="text"
-                placeholder="Type your message securely..."
+                placeholder={t('typeMessage')}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-xs"
@@ -427,16 +439,20 @@ export default function ChatPage() {
                 disabled={!inputText.trim() || sending}
                 className="p-2.5 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white rounded-xl disabled:opacity-55 disabled:cursor-not-allowed shadow-md shadow-emerald-100 transition-all duration-300"
               >
-                <Send className="w-4 h-4" />
+                <Send className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
               </button>
             </form>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8">
             <MessageSquare className="w-12 h-12 text-slate-200 mb-3" />
-            <h3 className="font-bold text-slate-600 text-sm">Select a Conversation</h3>
+            <h3 className="font-bold text-slate-600 text-sm">
+              {isRtl ? 'اختر محادثة' : 'Select a Conversation'}
+            </h3>
             <p className="text-xs text-slate-450 mt-1 max-w-sm text-center">
-              Choose an active channel from the sidebar to chat securely.
+              {isRtl 
+                ? 'اختر قناة نشطة من الشريط الجانبي لبدء المحادثة بشكل آمن.'
+                : 'Choose an active channel from the sidebar to chat securely.'}
             </p>
           </div>
         )}

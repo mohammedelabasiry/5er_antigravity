@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { HeartHandshake, ShieldAlert, User, ShieldCheck, Heart } from 'lucide-react';
+import { useTranslation } from '@/lib/LanguageContext';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t, isRtl } = useTranslation();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -64,33 +66,33 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed.');
+        throw new Error(data.error ? (isRtl ? 'فشل إنشاء الحساب.' : data.error) : t('registrationFailed'));
       }
 
       router.refresh();
       router.push(data.redirectUrl);
     } catch (err: any) {
-      setError(err.message || 'An error occurred during registration.');
+      setError(err.message || t('errorRegistration'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center items-center px-4 py-16 bg-slate-50/50">
+    <div className={`flex-1 flex flex-col justify-center items-center px-4 py-16 bg-slate-50/50 ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="w-full max-w-lg bg-white border border-slate-100 shadow-xl shadow-slate-100 rounded-3xl p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-1">
             <HeartHandshake className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Create your account</h2>
-          <p className="text-sm text-slate-500">Join the KhairLink Sadaqah Governance Platform</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t('registerTitle')}</h2>
+          <p className="text-sm text-slate-500">{t('registerSubtitle')}</p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="p-4 bg-rose-50 border border-rose-100 text-rose-800 text-sm rounded-2xl flex items-start gap-2">
+          <div className={`p-4 bg-rose-50 border border-rose-100 text-rose-800 text-sm rounded-2xl flex items-start gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -107,7 +109,7 @@ export default function RegisterPage() {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Donor
+            {t('roleDonor')}
           </button>
           <button
             type="button"
@@ -118,7 +120,7 @@ export default function RegisterPage() {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Beneficiary
+            {t('roleBeneficiary')}
           </button>
           <button
             type="button"
@@ -129,28 +131,28 @@ export default function RegisterPage() {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            Charity
+            {t('roleCharity')}
           </button>
         </div>
 
         {/* Helper info based on selected role */}
-        <div className="p-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl text-xs text-emerald-800 flex gap-2 items-center">
+        <div className={`p-4 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl text-xs text-emerald-800 flex gap-2 items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
           {role === 'DONOR' && (
             <>
               <Heart className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>You will be able to browse needy families nearby, make contributions, and track receipts.</span>
+              <span>{t('helpDonor')}</span>
             </>
           )}
           {role === 'BENEFICIARY' && (
             <>
               <User className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Your profile remains 100% private. Donors see an anonymous code and display name only.</span>
+              <span>{t('helpBeneficiary')}</span>
             </>
           )}
           {role === 'CHARITY_ADMIN' && (
             <>
               <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>Your account requires admin verification of license documents before you can log in fully.</span>
+              <span>{t('helpCharity')}</span>
             </>
           )}
         </div>
@@ -159,22 +161,22 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                Full Name / Representative Name
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                {t('fullNameLabel')}
               </label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Ahmed Ali"
+                placeholder={isRtl ? "أحمد علي" : "Ahmed Ali"}
                 className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                Email Address
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                {t('emailLabel')}
               </label>
               <input
                 type="email"
@@ -188,8 +190,8 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-              Choose Password
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+              {t('choosePasswordLabel')}
             </label>
             <input
               type="password"
@@ -204,26 +206,26 @@ export default function RegisterPage() {
           {/* Charity-specific inputs */}
           {role === 'CHARITY_ADMIN' && (
             <div className="border-t border-slate-100 pt-4 space-y-4">
-              <h3 className="text-sm font-bold text-slate-700">Charity Organization Details</h3>
+              <h3 className="text-sm font-bold text-slate-700">{t('charityDetailsHeader')}</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                    Charity Name
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                    {t('charityNameLabel')}
                   </label>
                   <input
                     type="text"
                     required
                     value={charityName}
                     onChange={(e) => setCharityName(e.target.value)}
-                    placeholder="Resala Charity Association"
+                    placeholder={isRtl ? "جمعية رسالة للأعمال الخيرية" : "Resala Charity Association"}
                     className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                    License Number / Reg ID
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                    {t('licenseLabel')}
                   </label>
                   <input
                     type="text"
@@ -237,8 +239,8 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                  Contact Phone Number
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                  {t('phoneLabel')}
                 </label>
                 <input
                   type="text"
@@ -251,13 +253,13 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-                  Brief Mission Description
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                  {t('missionLabel')}
                 </label>
                 <textarea
                   value={charityDescription}
                   onChange={(e) => setCharityDescription(e.target.value)}
-                  placeholder="Describe your organization goals and main focus areas..."
+                  placeholder={isRtl ? "صف أهداف جمعيتك ومجالات التركيز الرئيسية..." : "Describe your organization goals and main focus areas..."}
                   rows={3}
                   className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all resize-none"
                 />
@@ -273,7 +275,7 @@ export default function RegisterPage() {
             {loading ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             ) : (
-              'Create Account'
+              t('createAccountBtn')
             )}
           </button>
         </form>
@@ -281,9 +283,9 @@ export default function RegisterPage() {
         {/* Footer info */}
         <div className="text-center pt-2 border-t border-slate-50">
           <p className="text-sm text-slate-500">
-            Already have an account?{' '}
+            {t('alreadyHaveAccount')}{' '}
             <Link href="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">
-              Log in instead
+              {t('loginInstead')}
             </Link>
           </p>
         </div>

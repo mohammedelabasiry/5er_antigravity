@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/LanguageContext';
 import { 
   MapPin, 
   Search, 
@@ -33,6 +34,7 @@ interface Beneficiary {
 }
 
 export default function MapDiscovery() {
+  const { t, language, isRtl } = useTranslation();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userMarkerRef = useRef<any>(null);
@@ -262,17 +264,17 @@ export default function MapDiscovery() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] lg:flex-row overflow-hidden bg-slate-50 text-left">
+    <div className={`flex flex-col h-[calc(100vh-4rem)] lg:flex-row overflow-hidden bg-slate-50 ${isRtl ? 'text-right' : 'text-left'}`}>
       {/* Sidebar Panel for filters and results */}
-      <div className="w-full lg:w-96 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col h-1/2 lg:h-full overflow-hidden shadow-sm z-10">
+      <div className={`w-full lg:w-96 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col h-1/2 lg:h-full overflow-hidden shadow-sm z-10 ${isRtl ? 'lg:border-r-0 lg:border-l' : ''}`}>
         {/* Header */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50">
-          <div className="flex items-center gap-2 text-emerald-700 font-extrabold text-sm sm:text-base">
+          <div className={`flex items-center gap-2 text-emerald-700 font-extrabold text-sm sm:text-base ${isRtl ? 'flex-row-reverse' : ''}`}>
             <MapPin className="w-5 h-5" />
-            <span>Map Discovery Portal</span>
+            <span>{t('mapPortal')}</span>
           </div>
           <p className="text-[10px] text-slate-400 mt-1">
-            Privacy shielded: All beneficiary locations have a random 100-300m offset.
+            {t('privacyShielded')}
           </p>
         </div>
 
@@ -280,23 +282,23 @@ export default function MapDiscovery() {
         <div className="p-4 border-b border-slate-100 space-y-4 text-xs">
           {/* Search bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <Search className={`absolute start-3 top-2.5 w-4 h-4 text-slate-400`} />
             <input
               type="text"
-              placeholder="Search by code, name, area..."
+              placeholder={t('searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-xs"
+              className="w-full ps-9 pe-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50 text-xs"
             />
           </div>
 
           {/* Range Slider */}
           <div className="space-y-1">
-            <div className="flex justify-between font-semibold text-slate-700">
-              <span>Search Radius:</span>
+            <div className={`flex justify-between font-semibold text-slate-700 ${isRtl ? 'flex-row-reverse' : ''}`}>
+              <span>{t('searchRadius')}:</span>
               <span className="text-emerald-600 font-bold">{radiusKm} km</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <input
                 type="range"
                 min="1"
@@ -318,7 +320,7 @@ export default function MapDiscovery() {
 
           {/* Categories Grid */}
           <div className="space-y-1.5">
-            <span className="font-semibold text-slate-700 block">Vulnerability Category:</span>
+            <span className={`font-semibold text-slate-700 block ${isRtl ? 'text-right' : ''}`}>{t('category')}:</span>
             <div className="grid grid-cols-4 gap-1.5">
               {['A', 'B', 'C', 'D'].map((cat) => {
                 const isSelected = selectedCategories.includes(cat);
@@ -339,7 +341,7 @@ export default function MapDiscovery() {
                   >
                     <span>{cat}</span>
                     <span className="text-[7px] uppercase font-normal opacity-80">
-                      {cat === 'A' ? 'Critical' : cat === 'B' ? 'High' : cat === 'C' ? 'Medium' : 'Low'}
+                      {cat === 'A' ? t('critical') : cat === 'B' ? t('high') : cat === 'C' ? t('medium') : t('low')}
                     </span>
                   </button>
                 );
@@ -348,21 +350,21 @@ export default function MapDiscovery() {
           </div>
 
           {/* Uncovered Need Toggle */}
-          <label className="flex items-center gap-2 cursor-pointer py-1">
+          <label className={`flex items-center gap-2 cursor-pointer py-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <input
               type="checkbox"
               checked={onlyShowUnsatisfied}
               onChange={(e) => setOnlyShowUnsatisfied(e.target.checked)}
               className="rounded accent-emerald-600 h-4 w-4"
             />
-            <span className="text-slate-600 font-medium">Only show cases needing support</span>
+            <span className="text-slate-600 font-medium">{t('onlyShowNeeding')}</span>
           </label>
         </div>
 
         {/* Results List */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          <div className="flex justify-between items-center text-xs text-slate-400 font-semibold mb-1">
-            <span>Matches ({filteredCases.length})</span>
+          <div className={`flex justify-between items-center text-xs text-slate-400 font-semibold mb-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
+            <span>{t('matches')} ({filteredCases.length})</span>
             {searchQuery || !onlyShowUnsatisfied || radiusKm !== 5 || selectedCategories.length !== 4 ? (
               <button 
                 onClick={() => {
@@ -373,7 +375,7 @@ export default function MapDiscovery() {
                 }} 
                 className="text-rose-600 hover:underline text-[10px]"
               >
-                Reset Filters
+                {t('resetFilters')}
               </button>
             ) : null}
           </div>
@@ -381,11 +383,11 @@ export default function MapDiscovery() {
           {loading ? (
             <div className="text-center py-12 text-slate-400 space-y-2">
               <div className="animate-spin inline-block w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full"></div>
-              <p className="text-xs">Loading local cases...</p>
+              <p className="text-xs">{t('loadingLocalCases')}</p>
             </div>
           ) : filteredCases.length === 0 ? (
             <div className="text-center py-12 text-slate-400 text-xs">
-              No matching cases found within search radius. Try dragging the map or expanding the range.
+              {t('noCasesFound')}
             </div>
           ) : (
             filteredCases.map((b) => {
@@ -410,7 +412,7 @@ export default function MapDiscovery() {
                       : 'border-slate-100 bg-white hover:border-slate-200'
                   }`}
                 >
-                  <div className="flex justify-between items-start">
+                  <div className={`flex justify-between items-start ${isRtl ? 'flex-row-reverse' : ''}`}>
                     <div className="space-y-0.5">
                       <span className="font-mono text-[9px] font-bold text-slate-400">
                         {b.code}
@@ -419,7 +421,7 @@ export default function MapDiscovery() {
                       <p className="text-[10px] text-slate-400">{b.areaName}</p>
                     </div>
                     <span className={`px-2 py-0.5 border text-[9px] font-bold rounded-md ${catBadge}`}>
-                      Cat {b.category}
+                      {t('category')} {b.category}
                     </span>
                   </div>
 
@@ -428,9 +430,9 @@ export default function MapDiscovery() {
                   </p>
 
                   <div className="space-y-1 pt-1">
-                    <div className="flex justify-between text-[9px] font-medium text-slate-500">
-                      <span>Covered: {progress}%</span>
-                      <span className="font-bold text-emerald-800">{remaining} EGP Remaining</span>
+                    <div className={`flex justify-between text-[9px] font-medium text-slate-500 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                      <span>{t('progressToTarget')}: {progress}%</span>
+                      <span className="font-bold text-emerald-800">{remaining} {t('egpRemaining')}</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-1.5">
                       <div
@@ -453,8 +455,8 @@ export default function MapDiscovery() {
 
         {/* Selected Case Floating Detail Card */}
         {selectedCase && (
-          <div className="absolute bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-white rounded-3xl border border-slate-150 shadow-2xl p-5 z-20 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <div className="flex justify-between items-start border-b border-slate-100 pb-3">
+          <div className={`absolute bottom-4 start-4 end-4 md:start-auto md:end-4 md:w-96 bg-white rounded-3xl border border-slate-150 shadow-2xl p-5 z-20 space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300 ${isRtl ? 'text-right' : 'text-left'}`}>
+            <div className={`flex justify-between items-start border-b border-slate-100 pb-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
               <div>
                 <span className="font-mono text-[10px] font-bold text-slate-400 block">
                   {selectedCase.code}
@@ -462,9 +464,9 @@ export default function MapDiscovery() {
                 <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">
                   {selectedCase.displayName}
                 </h3>
-                <p className="text-[11px] text-slate-400 font-medium flex items-center gap-1">
+                <p className={`text-[11px] text-slate-400 font-medium flex items-center gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
                   <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-                  {selectedCase.areaName} (Approx. Boundary)
+                  {selectedCase.areaName} ({t('approxBoundary')})
                 </p>
               </div>
               <button
@@ -480,23 +482,23 @@ export default function MapDiscovery() {
                 {selectedCase.caseSummary}
               </p>
 
-              <div className="grid grid-cols-2 gap-3 text-xs border-y border-slate-50 py-3 bg-slate-50/50 rounded-2xl px-3">
+              <div className={`grid grid-cols-2 gap-3 text-xs border-y border-slate-50 py-3 bg-slate-50/50 rounded-2xl px-3 ${isRtl ? 'text-right' : 'text-left'}`}>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-semibold uppercase">Category</span>
-                  <span className="font-bold text-slate-800">Cat {selectedCase.category} ({selectedCase.evaluationScore} Score)</span>
+                  <span className="text-[10px] text-slate-400 block font-semibold uppercase">{t('categoryLabel')}</span>
+                  <span className="font-bold text-slate-800">{t('category')} {selectedCase.category} ({selectedCase.evaluationScore} {t('score')})</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-semibold uppercase">Family Details</span>
+                  <span className="text-[10px] text-slate-400 block font-semibold uppercase">{t('familyDetails')}</span>
                   <span className="font-bold text-slate-800">
-                    {selectedCase.familyMembersCount} Members ({selectedCase.childrenCount} Kids)
+                    {selectedCase.familyMembersCount} {t('members')} ({selectedCase.childrenCount} {t('kids')})
                   </span>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between text-slate-600 font-semibold">
-                  <span>Covered Progress:</span>
+                <div className={`flex justify-between text-slate-600 font-semibold ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <span>{t('coveredProgress')}</span>
                   <span className="font-bold text-emerald-700">
                     {selectedCase.monthlyReceivedAmount} / {selectedCase.monthlySupportCap} EGP
                   </span>
@@ -520,13 +522,13 @@ export default function MapDiscovery() {
                 href={`/donor/beneficiary/${selectedCase.code}`}
                 className="py-2.5 text-center bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-colors"
               >
-                Anonymous Details
+                {t('anonymousDetails')}
               </Link>
               <Link
                 href={`/donor/donate/${selectedCase.code}`}
                 className="py-2.5 text-center bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white rounded-xl text-xs font-extrabold shadow-md shadow-emerald-100 transition-all duration-300"
               >
-                Donate Direct
+                {t('donateDirect')}
               </Link>
             </div>
           </div>

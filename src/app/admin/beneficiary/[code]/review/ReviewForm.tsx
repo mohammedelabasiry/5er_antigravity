@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Unlock, MessageSquare, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { translations } from '@/lib/LanguageContext';
 
 interface AdminNote {
   id: string;
@@ -15,6 +16,7 @@ interface ReviewFormProps {
   initialCap: number;
   initialCategory: string;
   adminNotesHistory: AdminNote[];
+  lang: 'en' | 'ar';
 }
 
 export default function ReviewForm({
@@ -22,8 +24,13 @@ export default function ReviewForm({
   initialCap,
   initialCategory,
   adminNotesHistory,
+  lang,
 }: ReviewFormProps) {
   const router = useRouter();
+  const isRtl = lang === 'ar';
+  const t = (key: keyof typeof translations['en']): string => {
+    return translations[lang]?.[key] || translations['en'][key] || String(key);
+  };
   
   const [category, setCategory] = useState(initialCategory);
   const [monthlySupportCap, setMonthlySupportCap] = useState(initialCap);
@@ -76,14 +83,14 @@ export default function ReviewForm({
   };
 
   return (
-    <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6 text-left">
-      <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-50 pb-2">
+    <div className={`bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-6 ${isRtl ? 'text-right' : 'text-left'}`}>
+      <h3 className={`font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-50 pb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
         <ShieldCheck className="text-emerald-600 w-4 h-4" />
-        Governance Decision Board
+        {t('governanceDecision')}
       </h3>
 
       {error && (
-        <div className="p-4 bg-rose-50 border border-rose-100 text-rose-800 text-xs rounded-xl flex items-start gap-1.5">
+        <div className={`p-4 bg-rose-50 border border-rose-100 text-rose-800 text-xs rounded-xl flex items-start gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           <span>{error}</span>
         </div>
@@ -94,7 +101,7 @@ export default function ReviewForm({
         {/* Status selection */}
         <div className="space-y-2">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Decision Action
+            {t('decisionAction')}
           </label>
           <div className="grid grid-cols-2 gap-3">
             <button
@@ -107,7 +114,7 @@ export default function ReviewForm({
               }`}
             >
               <CheckCircle className="w-4 h-4" />
-              Approve Case
+              {t('approveCase')}
             </button>
             <button
               type="button"
@@ -119,7 +126,7 @@ export default function ReviewForm({
               }`}
             >
               <XCircle className="w-4 h-4" />
-              Reject Application
+              {t('rejectApplication')}
             </button>
           </div>
         </div>
@@ -127,36 +134,37 @@ export default function ReviewForm({
         {/* Category brackets */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-            Need Category Bracket
+            {t('needCategoryBracket')}
           </label>
           <select
             value={category}
             onChange={(e) => handleCategoryChange(e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm focus:outline-none transition-all"
+            className={`w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm focus:outline-none transition-all ${isRtl ? 'text-right' : 'text-left'}`}
+            dir={isRtl ? 'rtl' : 'ltr'}
           >
-            <option value="A">Category A - Extremely Vulnerable</option>
-            <option value="B">Category B - Very Needy</option>
-            <option value="C">Category C - Needy</option>
-            <option value="D">Category D - Limited Support</option>
+            <option value="A">{t('categoryA')}</option>
+            <option value="B">{t('categoryB')}</option>
+            <option value="C">{t('categoryC')}</option>
+            <option value="D">{t('categoryD')}</option>
           </select>
         </div>
 
         {/* Cap Support Target */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-            Monthly Cap support (EGP)
+            {t('monthlyCapSupport')}
           </label>
           <input
             type="number"
             required
             value={monthlySupportCap}
             onChange={(e) => setMonthlySupportCap(Math.max(0, Number(e.target.value)))}
-            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm focus:outline-none transition-all font-bold text-slate-900"
+            className={`w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm focus:outline-none transition-all font-bold text-slate-900 ${isRtl ? 'text-right' : 'text-left'}`}
           />
         </div>
 
         {/* Override toggle */}
-        <div className="p-4 border border-slate-100 rounded-2xl bg-slate-50/50 flex items-start gap-3">
+        <div className={`p-4 border border-slate-100 rounded-2xl bg-slate-50/50 flex items-start gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <input
             type="checkbox"
             id="override"
@@ -164,13 +172,13 @@ export default function ReviewForm({
             onChange={(e) => setIsEligibleOverride(e.target.checked)}
             className="w-4.5 h-4.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 mt-0.5"
           />
-          <div className="space-y-0.5">
-            <label htmlFor="override" className="text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer">
+          <div className={`space-y-0.5 ${isRtl ? 'text-right' : ''}`}>
+            <label htmlFor="override" className={`text-xs font-bold text-slate-700 flex items-center gap-1 cursor-pointer ${isRtl ? 'flex-row-reverse' : ''}`}>
               <Unlock className="w-3.5 h-3.5 text-amber-600" />
-              Admin Cap Override
+              {t('adminCapOverride')}
             </label>
             <p className="text-[10px] text-slate-400 leading-normal">
-              If checked, this case is permitted to receive donations exceeding the monthly cap limit without being hidden.
+              {t('adminCapOverrideDesc')}
             </p>
           </div>
         </div>
@@ -178,15 +186,16 @@ export default function ReviewForm({
         {/* Review Notes */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-            Auditor Comments / Review Notes
+            {t('auditorComments')}
           </label>
           <textarea
             required={status === 'REJECTED'}
             value={noteText}
             onChange={(e) => setNoteText(e.target.value)}
-            placeholder="Document the reasons for this decision or guidelines for social workers..."
+            placeholder={t('documentReasonPlaceholder')}
             rows={4}
-            className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all resize-none"
+            dir={isRtl ? 'rtl' : 'ltr'}
+            className={`w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all resize-none ${isRtl ? 'text-right' : 'text-left'}`}
           />
         </div>
 
@@ -198,7 +207,7 @@ export default function ReviewForm({
           {loading ? (
             <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           ) : (
-            'Commit Audit Verdict'
+            t('commitAuditVerdict')
           )}
         </button>
       </form>
@@ -206,16 +215,16 @@ export default function ReviewForm({
       {/* Admin Notes History */}
       {adminNotesHistory.length > 0 && (
         <div className="border-t border-slate-100 pt-4 space-y-3">
-          <h4 className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+          <h4 className={`text-xs font-bold text-slate-700 flex items-center gap-1.5 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <MessageSquare className="w-4 h-4 text-slate-400" />
-            Decision Audit Trail
+            {t('decisionAuditTrail')}
           </h4>
           <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
             {adminNotesHistory.map((note) => (
               <div key={note.id} className="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs">
-                <p className="text-slate-650 leading-relaxed font-medium">{note.content}</p>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  {new Date(note.createdAt).toLocaleString()}
+                <p className={`text-slate-650 leading-relaxed font-medium ${isRtl ? 'text-right' : ''}`}>{note.content}</p>
+                <p className={`text-[10px] text-slate-400 mt-1 ${isRtl ? 'text-right' : ''}`}>
+                  {new Date(note.createdAt).toLocaleString(lang === 'ar' ? 'ar-EG' : 'en-US')}
                 </p>
               </div>
             ))}

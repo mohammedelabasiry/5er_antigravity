@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { UserCheck, UserX, Phone, Mail, Coins, Calendar } from 'lucide-react';
+import { translations } from '@/lib/LanguageContext';
 
 interface Donor {
   id: string;
@@ -18,12 +19,18 @@ interface Donor {
 
 interface DonorListProps {
   initialDonors: Donor[];
+  lang: 'en' | 'ar';
 }
 
-export default function DonorList({ initialDonors }: DonorListProps) {
+export default function DonorList({ initialDonors, lang }: DonorListProps) {
   const [donors, setDonors] = useState<Donor[]>(initialDonors);
   const [searchTerm, setSearchTerm] = useState('');
   const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const isRtl = lang === 'ar';
+  const t = (key: keyof typeof translations['en']): string => {
+    return translations[lang]?.[key] || translations['en'][key] || String(key);
+  };
 
   const handleToggleBlock = async (userId: string, currentStatus: boolean) => {
     setTogglingId(userId);
@@ -57,22 +64,23 @@ export default function DonorList({ initialDonors }: DonorListProps) {
   );
 
   return (
-    <div className="space-y-6 text-left">
+    <div className={`space-y-6 ${isRtl ? 'text-right' : 'text-left'}`}>
       {/* Search Bar */}
       <div className="bg-white border border-slate-100 p-4 rounded-2xl shadow-sm">
         <input
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search donors by name or email address..."
-          className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm focus:outline-none transition-all"
+          placeholder={t('searchDonorPlaceholder')}
+          className={`w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm focus:outline-none transition-all ${isRtl ? 'text-right' : 'text-left'}`}
+          dir={isRtl ? 'rtl' : 'ltr'}
         />
       </div>
 
       {/* Donor list grid */}
       {filteredDonors.length === 0 ? (
         <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center text-slate-400">
-          No donors match your search.
+          {t('noDonorsMatch')}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -82,8 +90,8 @@ export default function DonorList({ initialDonors }: DonorListProps) {
               className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
             >
               <div className="space-y-3">
-                <div className="flex justify-between items-start">
-                  <div>
+                <div className={`flex justify-between items-start ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <div className={isRtl ? 'text-right' : ''}>
                     <h3 className="font-extrabold text-slate-800 text-base">
                       {d.displayName}
                     </h3>
@@ -96,43 +104,43 @@ export default function DonorList({ initialDonors }: DonorListProps) {
                         : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                     }`}
                   >
-                    {d.isBlocked ? 'Suspended' : 'Active'}
+                    {d.isBlocked ? t('suspendedBadge') : t('activeBadge')}
                   </span>
                 </div>
 
-                {d.bio && <p className="text-xs text-slate-500 italic">"{d.bio}"</p>}
+                {d.bio && <p className={`text-xs text-slate-500 italic ${isRtl ? 'text-right' : ''}`}>"{d.bio}"</p>}
 
                 {/* Donation Metrics */}
                 <div className="grid grid-cols-2 gap-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                  <div className="text-xs">
-                    <p className="text-[10px] text-slate-400">Total Donated</p>
-                    <p className="font-bold text-slate-800 mt-0.5 flex items-center gap-1">
-                      <Coins className="w-3.5 h-3.5 text-emerald-600" />
-                      {d.totalDonated.toLocaleString()} EGP
+                  <div className={`text-xs ${isRtl ? 'text-right' : ''}`}>
+                    <p className="text-[10px] text-slate-400">{t('totalDonated')}</p>
+                    <p className={`font-bold text-slate-800 mt-0.5 flex items-center gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                      <Coins className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      {d.totalDonated.toLocaleString()} {t('egp')}
                     </p>
                   </div>
-                  <div className="text-xs">
-                    <p className="text-[10px] text-slate-400">Contributions</p>
+                  <div className={`text-xs ${isRtl ? 'text-right' : ''}`}>
+                    <p className="text-[10px] text-slate-400">{t('contributions')}</p>
                     <p className="font-bold text-slate-850 mt-0.5">
-                      {d.donationsCount} confirmed
+                      {d.donationsCount} {t('confirmed')}
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-1.5 pt-2 text-xs border-t border-slate-50">
-                  <p className="flex items-center gap-1.5 text-slate-650">
-                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                <div className={`space-y-1.5 pt-2 text-xs border-t border-slate-50 ${isRtl ? 'text-right' : ''}`}>
+                  <p className={`flex items-center gap-1.5 text-slate-650 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     {d.email}
                   </p>
                   {d.phone && (
-                    <p className="flex items-center gap-1.5 text-slate-650">
-                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <p className={`flex items-center gap-1.5 text-slate-650 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       {d.phone}
                     </p>
                   )}
-                  <p className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                    <Calendar className="w-3.5 h-3.5 text-slate-350" />
-                    Joined: {new Date(d.createdAt).toLocaleDateString()}
+                  <p className={`flex items-center gap-1.5 text-[10px] text-slate-400 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <Calendar className="w-3.5 h-3.5 text-slate-350 shrink-0" />
+                    {t('joined')}: {new Date(d.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US')}
                   </p>
                 </div>
               </div>
@@ -152,12 +160,12 @@ export default function DonorList({ initialDonors }: DonorListProps) {
                   ) : d.isBlocked ? (
                     <>
                       <UserCheck className="w-3.5 h-3.5" />
-                      Reactivate Account
+                      {t('reactivateAccount')}
                     </>
                   ) : (
                     <>
                       <UserX className="w-3.5 h-3.5" />
-                      Suspend Donor
+                      {t('suspendDonor')}
                     </>
                   )}
                 </button>

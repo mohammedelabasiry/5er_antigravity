@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { translations } from '@/lib/LanguageContext';
 import { ArrowLeft, Building } from 'lucide-react';
 import CharityList from './CharityList';
 
@@ -29,36 +31,43 @@ export default async function AdminCharitiesPage() {
 
   const charities = await getCharities();
 
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get('language')?.value || 'en') as 'en' | 'ar';
+  const isRtl = lang === 'ar';
+  const t = (key: keyof typeof translations['en']): string => {
+    return translations[lang]?.[key] || translations['en'][key] || String(key);
+  };
+
   return (
-    <div className="flex-1 bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 text-left">
+    <div className={`flex-1 bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="max-w-6xl mx-auto space-y-6">
         
         {/* Back Link */}
         <Link
           href="/admin/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors"
+          className={`inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors ${isRtl ? 'flex-row-reverse' : ''}`}
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Admin Dashboard
+          <ArrowLeft className={`w-4 h-4 ${isRtl ? 'rotate-180' : ''}`} />
+          {t('backToAdminDashboard')}
         </Link>
 
         {/* Header */}
-        <div className="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm flex items-center gap-3">
+        <div className={`bg-white border border-slate-100 p-6 rounded-3xl shadow-sm flex items-center gap-3 ${isRtl ? 'flex-row-reverse' : ''}`}>
           <span className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl">
             <Building className="w-6 h-6" />
           </span>
-          <div>
+          <div className={isRtl ? 'text-right' : ''}>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-              Charity Organizations Directory
+              {t('charitiesDirectory')}
             </h1>
             <p className="text-xs text-slate-500">
-              Review charity licenses, details, and manage platform permission states.
+              {t('charitiesDirectoryDesc')}
             </p>
           </div>
         </div>
 
         {/* Interactive Charity List */}
-        <CharityList initialCharities={charities} />
+        <CharityList initialCharities={charities} lang={lang} />
       </div>
     </div>
   );

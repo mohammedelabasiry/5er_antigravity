@@ -4,9 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { HeartHandshake, ShieldAlert, Lock, Mail } from 'lucide-react';
+import { useTranslation } from '@/lib/LanguageContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t, isRtl } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -27,33 +29,33 @@ export default function LoginPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to sign in. Please check your credentials.');
+        throw new Error(data.error ? (isRtl ? 'فشل تسجيل الدخول. يرجى التحقق من بيانات الاعتماد.' : data.error) : t('loginFailed'));
       }
 
       router.refresh();
       router.push(data.redirectUrl);
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Please try again.');
+      setError(err.message || t('errorTryAgain'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center items-center px-4 py-16 bg-slate-50/50">
+    <div className={`flex-1 flex flex-col justify-center items-center px-4 py-16 bg-slate-50/50 ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="w-full max-w-md bg-white border border-slate-100 shadow-xl shadow-slate-100 rounded-3xl p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <div className="inline-flex p-3 bg-emerald-50 text-emerald-600 rounded-2xl mb-1">
             <HeartHandshake className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome back</h2>
-          <p className="text-sm text-slate-500">Log in to the Sadaqah Governance Platform</p>
+          <h2 className="text-2xl font-bold text-slate-900 tracking-tight">{t('loginTitle')}</h2>
+          <p className="text-sm text-slate-500">{t('loginSubtitle')}</p>
         </div>
 
         {/* Error Alert */}
         {error && (
-          <div className="p-4 bg-rose-50 border border-rose-100 text-rose-800 text-sm rounded-2xl flex items-start gap-2">
+          <div className={`p-4 bg-rose-50 border border-rose-100 text-rose-800 text-sm rounded-2xl flex items-start gap-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
             <ShieldAlert className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
             <span>{error}</span>
           </div>
@@ -62,35 +64,35 @@ export default function LoginPage() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-              Email Address
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+              {t('emailLabel')}
             </label>
             <div className="relative">
-              <Mail className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
+              <Mail className="w-5 h-5 text-slate-400 absolute start-3.5 top-3.5" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@organization.org"
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 pl-11 pr-4 text-slate-800 text-sm focus:outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 ps-11 pe-4 text-slate-800 text-sm focus:outline-none transition-all"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider pl-1">
-              Password
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+              {t('passwordLabel')}
             </label>
             <div className="relative">
-              <Lock className="w-5 h-5 text-slate-400 absolute left-3.5 top-3.5" />
+              <Lock className="w-5 h-5 text-slate-400 absolute start-3.5 top-3.5" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 pl-11 pr-4 text-slate-800 text-sm focus:outline-none transition-all"
+                className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 ps-11 pe-4 text-slate-800 text-sm focus:outline-none transition-all"
               />
             </div>
           </div>
@@ -103,7 +105,7 @@ export default function LoginPage() {
             {loading ? (
               <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             ) : (
-              'Access Account'
+              t('accessAccount')
             )}
           </button>
         </form>
@@ -111,9 +113,9 @@ export default function LoginPage() {
         {/* Footer info */}
         <div className="text-center pt-2 border-t border-slate-50">
           <p className="text-sm text-slate-500">
-            Don't have an account?{' '}
+            {t('dontHaveAccount')}{' '}
             <Link href="/register" className="text-emerald-600 hover:text-emerald-700 font-semibold">
-              Create an account
+              {t('createAccountLink')}
             </Link>
           </p>
         </div>
@@ -121,15 +123,15 @@ export default function LoginPage() {
 
       {/* Seed Credentials Quick Guide */}
       <div className="mt-8 w-full max-w-md bg-emerald-50 border border-emerald-100 rounded-2xl p-5 text-xs text-slate-600 space-y-2">
-        <h4 className="font-bold text-emerald-800 flex items-center gap-1">
-          Demo Credentials (Password: <code className="bg-emerald-100 px-1 py-0.5 rounded font-mono">password123</code>)
+        <h4 className={`font-bold text-emerald-800 flex items-center gap-1 ${isRtl ? 'flex-row-reverse' : ''}`}>
+          {t('demoCredentials')}
         </h4>
-        <ul className="list-disc pl-4 space-y-1">
-          <li><strong>Super Admin:</strong> <code className="font-mono">admin@khairlink.org</code></li>
-          <li><strong>Donor:</strong> <code className="font-mono">donor1@gmail.com</code> (Sadaqah Giver)</li>
-          <li><strong>Charity:</strong> <code className="font-mono">charity1@charity.org</code> (Resala Association)</li>
-          <li><strong>Beneficiary (Approved):</strong> <code className="font-mono">ben2@gmail.com</code> (Widow Case)</li>
-          <li><strong>Beneficiary (Onboarding Pending):</strong> <code className="font-mono">ben5@gmail.com</code></li>
+        <ul className={`list-disc ps-4 space-y-1 ${isRtl ? 'pr-4 pl-0' : ''}`}>
+          <li><strong>{t('demoSuperAdmin')}:</strong> <code className="font-mono">admin@khairlink.org</code></li>
+          <li><strong>{t('demoDonor')}:</strong> <code className="font-mono">donor1@gmail.com</code></li>
+          <li><strong>{t('demoCharity')}:</strong> <code className="font-mono">charity1@charity.org</code></li>
+          <li><strong>{t('demoBenApproved')}:</strong> <code className="font-mono">ben2@gmail.com</code></li>
+          <li><strong>{t('demoBenPending')}:</strong> <code className="font-mono">ben5@gmail.com</code></li>
         </ul>
       </div>
     </div>

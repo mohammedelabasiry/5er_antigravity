@@ -120,7 +120,7 @@ export default function Navbar({ user }: NavbarProps) {
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      Charities
+                      {t('navCharities')}
                     </Link>
                     <Link
                       href="/admin/donors"
@@ -130,7 +130,7 @@ export default function Navbar({ user }: NavbarProps) {
                           : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                       }`}
                     >
-                      Donors
+                      {t('navDonors')}
                     </Link>
                   </>
                 )}
