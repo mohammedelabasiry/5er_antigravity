@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { translations } from '@/lib/LanguageContext';
 import { 
   ArrowLeft, 
   Coins, 
@@ -22,7 +24,6 @@ export const dynamic = 'force-dynamic';
 async function getTransactions(session: { userId: string; role: string }) {
   const { userId, role } = session;
 
-  // Unify includes config to ensure TypeScript infers a single identical type
   const includeConfig = {
     beneficiaryProfile: { select: { code: true, displayName: true } },
     donorProfile: { select: { displayName: true } },
@@ -48,7 +49,6 @@ async function getTransactions(session: { userId: string; role: string }) {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Map to anonymize donor info
     return contribs.map((c) => ({
       ...c,
       donorProfile: c.donorProfile ? { displayName: 'Anonymous Supporter' } : null,
@@ -93,27 +93,34 @@ export default async function TransactionsPage() {
 
   const transactions = await getTransactions(session);
 
+  const cookieStore = await cookies();
+  const lang = (cookieStore.get('language')?.value || 'en') as 'en' | 'ar';
+  const isRtl = lang === 'ar';
+  const t = (key: keyof typeof translations['en']): string => {
+    return translations[lang]?.[key] || translations['en'][key] || String(key);
+  };
+
   const getStatusBadge = (status: ContributionStatus) => {
     switch (status) {
       case ContributionStatus.DELIVERED:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg text-xs font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Delivered
+            {t('delivered')}
           </span>
         );
       case ContributionStatus.CONFIRMED:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg text-xs font-bold">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            Confirmed
+            {lang === 'ar' ? 'مؤكد' : 'Confirmed'}
           </span>
         );
       case ContributionStatus.PENDING:
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-100 rounded-lg text-xs font-bold">
             <Clock className="w-3.5 h-3.5" />
-            Pending
+            {t('pending')}
           </span>
         );
       case ContributionStatus.CANCELLED:
@@ -121,7 +128,7 @@ export default async function TransactionsPage() {
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-lg text-xs font-bold">
             <XCircle className="w-3.5 h-3.5" />
-            {status}
+            {lang === 'ar' ? (status === 'CANCELLED' ? 'ملغي' : 'مرفوض') : status}
           </span>
         );
       default:
@@ -130,15 +137,15 @@ export default async function TransactionsPage() {
   };
 
   return (
-    <div className="flex-1 bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 text-left">
+    <div className={`flex-1 bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header */}
         <div className="flex justify-between items-center">
           <div className="space-y-1">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Financial & Resource Audit Ledger</h1>
-            <p className="text-xs text-slate-550">
-              Transparent transaction registry matching aid distributions with active support caps.
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">{t('ledgerTitle')}</h1>
+            <p className="text-xs text-slate-400">
+              {t('ledgerSubtitle')}
             </p>
           </div>
         </div>
@@ -146,27 +153,33 @@ export default async function TransactionsPage() {
         {/* Audit Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Total Registry Count</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">{t('totalRegistry')}</span>
             <p className="text-3xl font-extrabold text-slate-800">{transactions.length}</p>
-            <p className="text-[10px] text-slate-555 font-medium">Recorded aid activities</p>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {lang === 'ar' ? 'تسجيلات الحوكمة النشطة' : 'Recorded aid activities'}
+            </p>
           </div>
           <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Total Transacted Value</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">{t('totalTransactedValue')}</span>
             <p className="text-3xl font-extrabold text-emerald-700">
               {transactions
                 .filter((t) => t.status === 'CONFIRMED' || t.status === 'DELIVERED')
                 .reduce((sum, t) => sum + t.amount, 0)
                 .toLocaleString()}{' '}
-              EGP
+              {t('egp')}
             </p>
-            <p className="text-[10px] text-slate-555 font-medium">Successfully delivered/confirmed</p>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {lang === 'ar' ? 'تم تأكيدها أو تسليمها بنجاح' : 'Successfully delivered/confirmed'}
+            </p>
           </div>
           <div className="bg-white border border-slate-100 rounded-3xl p-5 shadow-sm space-y-1">
-            <span className="text-[10px] uppercase font-bold text-slate-400">Pending Governance Check</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400">{t('pendingGovernance')}</span>
             <p className="text-3xl font-extrabold text-amber-600">
               {transactions.filter((t) => t.status === 'PENDING').length}
             </p>
-            <p className="text-[10px] text-slate-555 font-medium">Awaiting audit or verification</p>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {lang === 'ar' ? 'بانتظار التحقق والموافقة' : 'Awaiting audit or verification'}
+            </p>
           </div>
         </div>
 
@@ -175,45 +188,48 @@ export default async function TransactionsPage() {
           {transactions.length === 0 ? (
             <div className="text-center py-20 text-slate-400 space-y-2">
               <Coins className="w-12 h-12 text-slate-200 mx-auto" />
-              <p className="font-bold text-slate-650">No transactions recorded</p>
-              <p className="text-xs">No aid distributions have been processed yet.</p>
+              <p className="font-bold text-slate-650">
+                {lang === 'ar' ? 'لا توجد معاملات مسجلة' : 'No transactions recorded'}
+              </p>
+              <p className="text-xs">
+                {lang === 'ar' ? 'لم يتم معالجة أي توزيع مساعدات بعد.' : 'No aid distributions have been processed yet.'}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-slate-700 text-left">
                 <thead className="bg-slate-50/50 border-b border-slate-100 text-slate-450 uppercase font-bold text-[9px] tracking-wider">
-                  <tr>
-                    <th className="px-6 py-4">Reference / ID</th>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Beneficiary</th>
-                    <th className="px-6 py-4">Source Contributor</th>
-                    <th className="px-6 py-4">Type / Particulars</th>
-                    <th className="px-6 py-4 text-right">Value (EGP)</th>
-                    <th className="px-6 py-4 text-center">Status</th>
+                  <tr className={isRtl ? 'text-right' : 'text-left'}>
+                    <th className={`px-6 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>{t('refReferenceId')}</th>
+                    <th className={`px-6 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>{t('date')}</th>
+                    <th className={`px-6 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>{t('refBeneficiary')}</th>
+                    <th className={`px-6 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>{t('refSourceContributor')}</th>
+                    <th className={`px-6 py-4 ${isRtl ? 'text-right' : 'text-left'}`}>{t('refTypeParticulars')}</th>
+                    <th className={`px-6 py-4 ${isRtl ? 'text-left' : 'text-right'}`}>{t('refValueEgp')}</th>
+                    <th className="px-6 py-4 text-center">{t('status')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {transactions.map((t) => {
-                    // Contributor Display
-                    let contributor = 'Anonymous';
-                    if (t.donorProfile) {
-                      contributor = t.donorProfile.displayName || 'Anonymous Donor';
-                    } else if (t.charityProfile) {
-                      contributor = t.charityProfile.charityName;
-                    } else if (t.createdById) {
-                      contributor = 'Admin Record';
+                  {transactions.map((trans) => {
+                    let contributor = t('anonymous');
+                    if (trans.donorProfile) {
+                      contributor = trans.donorProfile.displayName || (lang === 'ar' ? 'متبرع فاعل خير' : 'Anonymous Donor');
+                    } else if (trans.charityProfile) {
+                      contributor = trans.charityProfile.charityName;
+                    } else if (trans.createdById) {
+                      contributor = lang === 'ar' ? 'سجل إداري' : 'Admin Record';
                     }
 
                     return (
-                      <tr key={t.id} className="hover:bg-slate-50/30 transition-colors">
+                      <tr key={trans.id} className="hover:bg-slate-50/30 transition-colors">
                         {/* Reference */}
-                        <td className="px-6 py-4 font-mono font-bold text-slate-450 text-[10px] whitespace-nowrap">
-                          {t.id.slice(0, 8).toUpperCase()}...
+                        <td className="px-6 py-4 font-mono font-bold text-slate-400 text-[10px] whitespace-nowrap">
+                          {trans.id.slice(0, 8).toUpperCase()}...
                         </td>
 
                         {/* Date */}
                         <td className="px-6 py-4 text-slate-500 font-medium whitespace-nowrap">
-                          {new Date(t.createdAt).toLocaleDateString(undefined, {
+                          {new Date(trans.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : undefined, {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
@@ -224,18 +240,18 @@ export default async function TransactionsPage() {
                         <td className="px-6 py-4">
                           <div className="space-y-0.5">
                             <span className="font-mono font-bold text-slate-400 text-[9px] block">
-                              {t.beneficiaryProfile.code}
+                              {trans.beneficiaryProfile.code}
                             </span>
                             <span className="font-bold text-slate-800">
-                              {t.beneficiaryProfile.displayName}
+                              {trans.beneficiaryProfile.displayName}
                             </span>
                           </div>
                         </td>
 
                         {/* Contributor */}
                         <td className="px-6 py-4">
-                          <span className="font-semibold text-slate-650 flex items-center gap-1.5">
-                            {t.donorProfile ? (
+                          <span className="font-semibold text-slate-600 flex items-center gap-1.5">
+                            {trans.donorProfile ? (
                               <User className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                             ) : (
                               <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
@@ -248,29 +264,34 @@ export default async function TransactionsPage() {
                         <td className="px-6 py-4">
                           <div className="space-y-0.5">
                             <span className="font-bold text-slate-800 flex items-center gap-1.5">
-                              {t.type === 'CASH' ? (
-                                <Coins className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                              {trans.type === 'CASH' ? (
+                                <>
+                                  <Coins className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                  {lang === 'ar' ? 'نقدي' : 'CASH'}
+                                </>
                               ) : (
-                                <Gift className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                <>
+                                  <Gift className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                                  {lang === 'ar' ? 'عيني' : 'RESOURCE'}
+                                </>
                               )}
-                              {t.type}
                             </span>
-                            {t.type === 'RESOURCE' && (
+                            {trans.type === 'RESOURCE' && (
                               <span className="text-[10px] text-slate-400 font-medium">
-                                {t.resourceType} ({t.resourceQuantity} qty)
+                                {trans.resourceType} ({trans.resourceQuantity} {t('qty')})
                               </span>
                             )}
                           </div>
                         </td>
 
                         {/* Value */}
-                        <td className="px-6 py-4 text-right font-bold text-slate-900 whitespace-nowrap">
-                          {t.amount.toLocaleString()} EGP
+                        <td className={`px-6 py-4 font-bold text-slate-900 whitespace-nowrap ${isRtl ? 'text-left' : 'text-right'}`}>
+                          {trans.amount.toLocaleString()} {t('egp')}
                         </td>
 
                         {/* Status */}
                         <td className="px-6 py-4 text-center whitespace-nowrap">
-                          {getStatusBadge(t.status)}
+                          {getStatusBadge(trans.status)}
                         </td>
                       </tr>
                     );

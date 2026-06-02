@@ -1,3 +1,5 @@
+'use client';
+
 import dynamic from 'next/dynamic';
 
 // Dynamically import the Map component to avoid SSR errors with Leaflet
