@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       where: { userId: session.userId },
     });
 
-    if (existingProfile) {
+    if (existingProfile && existingProfile.status !== 'DRAFT') {
       return NextResponse.json({ error: 'Profile already submitted' }, { status: 400 });
     }
 
@@ -52,13 +52,16 @@ export async function POST(request: Request) {
     const existingNatId = await prisma.beneficiaryProfile.findUnique({
       where: { nationalId },
     });
-    if (existingNatId) {
+    if (existingNatId && existingNatId.userId !== session.userId) {
       return NextResponse.json({ error: 'This National ID has already been registered' }, { status: 400 });
     }
 
     // Sequence Code Generation (e.g. KH-2026-00011)
-    const count = await prisma.beneficiaryProfile.count();
-    const code = `KH-2026-${String(count + 1).padStart(5, '0')}`;
+    let code = existingProfile?.code;
+    if (!code) {
+      const count = await prisma.beneficiaryProfile.count();
+      code = `KH-2026-${String(count + 1).padStart(5, '0')}`;
+    }
 
     // Perform poverty evaluation score calculation
     const evaluation = calculateScoreAndCategory({
@@ -74,38 +77,50 @@ export async function POST(request: Request) {
     });
 
     const profile = await prisma.$transaction(async (tx) => {
-      // 1. Create the Profile
-      const newProfile = await tx.beneficiaryProfile.create({
-        data: {
-          userId: session.userId,
-          code,
-          displayName,
-          fullName,
-          nationalId,
-          category: evaluation.category,
-          monthlySupportCap: evaluation.recommendedAmount,
-          monthlyReceivedAmount: 0,
-          caseSummary,
-          areaName,
-          latitude: Number(latitude) || 30.0444,
-          longitude: Number(longitude) || 31.2357,
-          showOnMap: showOnMap !== undefined ? Boolean(showOnMap) : true,
-          address,
-          phone,
-          monthlyIncome: Number(monthlyIncome) || 0,
-          familyMembersCount: Number(familyMembersCount) || 1,
-          childrenCount: Number(childrenCount) || 0,
-          employmentStatus: employmentStatus || 'Unemployed',
-          medicalConditions: medicalConditions || '',
-          housingStatus: housingStatus || 'Rented',
-          debtObligations: Number(debtObligations) || 0,
-          urgentNeeds: urgentNeeds || '',
-          existingSupport: Number(existingSupport) || 0,
-          evaluationScore: evaluation.score,
-          status: BeneficiaryStatus.PENDING_REVIEW,
-          verificationStatus: 'PENDING',
-        },
-      });
+      // 1. Create or Update the Profile
+      let newProfile;
+      const profileData = {
+        displayName,
+        fullName,
+        nationalId,
+        category: evaluation.category,
+        monthlySupportCap: evaluation.recommendedAmount,
+        monthlyReceivedAmount: 0,
+        caseSummary,
+        areaName,
+        latitude: Number(latitude) || 30.0444,
+        longitude: Number(longitude) || 31.2357,
+        showOnMap: showOnMap !== undefined ? Boolean(showOnMap) : true,
+        address,
+        phone,
+        monthlyIncome: Number(monthlyIncome) || 0,
+        familyMembersCount: Number(familyMembersCount) || 1,
+        childrenCount: Number(childrenCount) || 0,
+        employmentStatus: employmentStatus || 'Unemployed',
+        medicalConditions: medicalConditions || '',
+        housingStatus: housingStatus || 'Rented',
+        debtObligations: Number(debtObligations) || 0,
+        urgentNeeds: urgentNeeds || '',
+        existingSupport: Number(existingSupport) || 0,
+        evaluationScore: evaluation.score,
+        status: BeneficiaryStatus.PENDING_REVIEW,
+        verificationStatus: 'PENDING',
+      };
+
+      if (existingProfile) {
+        newProfile = await tx.beneficiaryProfile.update({
+          where: { id: existingProfile.id },
+          data: profileData,
+        });
+      } else {
+        newProfile = await tx.beneficiaryProfile.create({
+          data: {
+            userId: session.userId,
+            code: code!,
+            ...profileData,
+          },
+        });
+      }
 
       // 2. Log Evaluation History
       await tx.evaluation.create({

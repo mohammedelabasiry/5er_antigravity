@@ -137,7 +137,18 @@ const onboardingTranslations = {
   }
 };
 
-export default function OnboardingForm() {
+interface OnboardingFormProps {
+  initialProfile: {
+    displayName: string;
+    fullName: string;
+    nationalId: string;
+    phone: string;
+    address: string;
+    areaName: string;
+  } | null;
+}
+
+export default function OnboardingForm({ initialProfile }: OnboardingFormProps) {
   const router = useRouter();
   const { language, isRtl } = useTranslation();
   const [step, setStep] = useState(1);
@@ -148,16 +159,21 @@ export default function OnboardingForm() {
     return onboardingTranslations[language]?.[key] || onboardingTranslations['en'][key];
   };
 
+  const initialAreaIndex = initialProfile 
+    ? AREAS.findIndex(a => a.name === initialProfile.areaName || a.nameAr === initialProfile.areaName)
+    : 0;
+  const safeAreaIndex = initialAreaIndex !== -1 ? initialAreaIndex : 0;
+
   // Form State
-  const [displayName, setDisplayName] = useState(language === 'ar' ? 'حالة دعم أسري' : 'Family Support Case');
+  const [displayName, setDisplayName] = useState(initialProfile?.displayName || (language === 'ar' ? 'حالة دعم أسري' : 'Family Support Case'));
   const [caseSummary, setCaseSummary] = useState('');
-  const [selectedAreaIndex, setSelectedAreaIndex] = useState(0);
+  const [selectedAreaIndex, setSelectedAreaIndex] = useState(safeAreaIndex);
   const [showOnMap, setShowOnMap] = useState(true);
 
-  const [fullName, setFullName] = useState('');
-  const [nationalId, setNationalId] = useState('');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState('');
+  const [fullName, setFullName] = useState(initialProfile?.fullName || '');
+  const [nationalId, setNationalId] = useState(initialProfile?.nationalId || '');
+  const [address, setAddress] = useState(initialProfile?.address || '');
+  const [phone, setPhone] = useState(initialProfile?.phone || '');
 
   const [monthlyIncome, setMonthlyIncome] = useState<number>(0);
   const [familyMembersCount, setFamilyMembersCount] = useState<number>(1);

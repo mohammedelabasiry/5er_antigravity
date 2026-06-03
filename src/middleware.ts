@@ -102,6 +102,7 @@ export const config = {
     '/chat/:path*',
     '/transactions/:path*',
     '/resources/:path*',
+    '/tickets/:path*',
     '/api/:path*',
   ],
 };

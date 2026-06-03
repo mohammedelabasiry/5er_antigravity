@@ -169,6 +169,17 @@ export default function Navbar({ user }: NavbarProps) {
                   {t('navResources')}
                 </Link>
 
+                <Link
+                  href="/tickets"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    isLinkActive('/tickets')
+                      ? 'bg-emerald-50 text-emerald-700'
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  {t('navTickets')}
+                </Link>
+
                 {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'CHARITY_ADMIN') && (
                   <Link
                     href="/reports"
@@ -324,6 +335,14 @@ export default function Navbar({ user }: NavbarProps) {
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('navResources')}
+            </Link>
+
+            <Link
+              href="/tickets"
+              className="block px-3 py-2 rounded-md text-base font-medium text-slate-700 hover:bg-slate-50"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t('navTickets')}
             </Link>
 
             {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN' || user.role === 'CHARITY_ADMIN') && (

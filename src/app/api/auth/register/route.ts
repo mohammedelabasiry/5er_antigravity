@@ -15,6 +15,10 @@ export async function POST(request: Request) {
       licenseNumber,
       charityPhone,
       charityDescription,
+      phone,
+      nationalId,
+      address,
+      areaName,
     } = body;
 
     if (!email || !password || !name || !role) {
@@ -26,12 +30,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Forbidden role selection' }, { status: 403 });
     }
 
+    // Validation for Donor/Beneficiary details
+    if (role === Role.DONOR || role === Role.BENEFICIARY) {
+      if (!phone || !nationalId) {
+        return NextResponse.json({ error: 'Phone number and National ID are required.' }, { status: 400 });
+      }
+      if (nationalId.length !== 14 || !/^\d+$/.test(nationalId)) {
+        return NextResponse.json({ error: 'National ID must be exactly 14 digits.' }, { status: 400 });
+      }
+    }
+
+    // Validation for Beneficiary address/area
+    if (role === Role.BENEFICIARY) {
+      if (!address || !areaName) {
+        return NextResponse.json({ error: 'Address and Area Name are required for beneficiaries.' }, { status: 400 });
+      }
+    }
+
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
       return NextResponse.json({ error: 'Email address is already in use' }, { status: 400 });
+    }
+
+    // National ID uniqueness check
+    if (nationalId) {
+      const existingBeneficiaryNatId = await prisma.beneficiaryProfile.findUnique({
+        where: { nationalId },
+      });
+      if (existingBeneficiaryNatId) {
+        return NextResponse.json({ error: 'This National ID is already registered.' }, { status: 400 });
+      }
+
+      const existingDonorNatId = await prisma.donorProfile.findFirst({
+        where: { nationalId },
+      });
+      if (existingDonorNatId) {
+        return NextResponse.json({ error: 'This National ID is already registered.' }, { status: 400 });
+      }
     }
 
     const passwordHash = await hashPassword(password);
@@ -53,6 +91,37 @@ export async function POST(request: Request) {
             userId: user.id,
             displayName: name,
             bio: 'Supporting local families.',
+            phone,
+            nationalId,
+            fullName: name,
+          },
+        });
+      } else if (role === Role.BENEFICIARY) {
+        // Generate sequence code
+        const count = await tx.beneficiaryProfile.count();
+        const code = `KH-2026-${String(count + 1).padStart(5, '0')}`;
+
+        // Create a DRAFT profile to be completed during onboarding
+        await tx.beneficiaryProfile.create({
+          data: {
+            userId: user.id,
+            code,
+            displayName: `Safe Profile ${code}`,
+            fullName: name,
+            nationalId,
+            phone,
+            address,
+            areaName,
+            category: 'D',
+            monthlySupportCap: 0.0,
+            monthlyReceivedAmount: 0.0,
+            caseSummary: 'Pending onboarding details.',
+            latitude: 30.0444, // Default Cairo coords, updated during onboarding
+            longitude: 31.2357,
+            status: 'DRAFT',
+            verificationStatus: 'PENDING',
+            employmentStatus: 'Unemployed',
+            housingStatus: 'Rented',
           },
         });
       } else if (role === Role.CHARITY_ADMIN) {

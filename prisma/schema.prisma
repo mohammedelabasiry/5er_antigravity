@@ -71,6 +71,7 @@ model User {
   charityProfile     CharityProfile?
   auditLogs          AuditLog[]
   notifications      Notification[]
+  tickets            Ticket[]
 }
 
 model BeneficiaryProfile {
@@ -131,11 +132,14 @@ model DonorProfile {
   displayName String
   phone       String?
   bio         String?
+  nationalId  String?
+  fullName    String?
   
   // Relations
   contributions         Contribution[]
   resourceDistributions ResourceDistribution[]
   conversations         ChatConversation[]
+  charityDonations      CharityDonation[]
   
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
@@ -156,6 +160,7 @@ model CharityProfile {
   contributions         Contribution[]
   resourceDistributions ResourceDistribution[]
   conversations         ChatConversation[]
+  charityDonations      CharityDonation[]
   
   createdAt     DateTime           @default(now())
   updatedAt     DateTime           @updatedAt
@@ -324,4 +329,30 @@ model ResourceStock {
   quantity     Int      @default(0)
   unit         String   // e.g. "kg", "units", "bags", "boxes"
   updatedAt    DateTime @updatedAt
+}
+
+model Ticket {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // COMPLAINT, SUGGESTION, BUG_REPORT
+  subject     String
+  message     String
+  status      String   @default("OPEN") // OPEN, IN_REVIEW, RESOLVED, CLOSED
+  adminReply  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CharityDonation {
+  id               String         @id @default(uuid())
+  donorProfileId   String
+  donorProfile     DonorProfile   @relation(fields: [donorProfileId], references: [id])
+  charityProfileId String
+  charityProfile   CharityProfile @relation(fields: [charityProfileId], references: [id])
+  amount           Float
+  notes            String?
+  status           String         @default("CONFIRMED") // CONFIRMED, DISTRIBUTED, CANCELLED
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 }

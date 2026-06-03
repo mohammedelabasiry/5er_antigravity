@@ -6,6 +6,19 @@ import Link from 'next/link';
 import { HeartHandshake, ShieldAlert, User, ShieldCheck, Heart } from 'lucide-react';
 import { useTranslation } from '@/lib/LanguageContext';
 
+const AREAS = [
+  { name: 'Downtown Cairo', nameAr: 'وسط البلد، القاهرة' },
+  { name: 'Garden City', nameAr: 'جاردن سيتي' },
+  { name: 'Zamalek', nameAr: 'الزمالك' },
+  { name: 'Dokki', nameAr: 'الدقي' },
+  { name: 'Mohandessin', nameAr: 'المهندسين' },
+  { name: 'Giza', nameAr: 'الجيزة' },
+  { name: 'Sayeda Zeinab', nameAr: 'السيدة زينب' },
+  { name: 'Nasr City', nameAr: 'مدينة نصر' },
+  { name: 'Heliopolis', nameAr: 'مصر الجديدة' },
+  { name: 'Maadi', nameAr: 'المعادي' },
+];
+
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -21,6 +34,12 @@ export default function RegisterPage() {
   const [licenseNumber, setLicenseNumber] = useState('');
   const [charityPhone, setCharityPhone] = useState('');
   const [charityDescription, setCharityDescription] = useState('');
+
+  // Additional fields for Beneficiary / Donor
+  const [phone, setPhone] = useState('');
+  const [nationalId, setNationalId] = useState('');
+  const [address, setAddress] = useState('');
+  const [areaName, setAreaName] = useState('Giza');
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +69,16 @@ export default function RegisterPage() {
         role,
       };
 
+      if (role === 'DONOR' || role === 'BENEFICIARY') {
+        payload.phone = phone;
+        payload.nationalId = nationalId;
+      }
+
+      if (role === 'BENEFICIARY') {
+        payload.address = address;
+        payload.areaName = areaName;
+      }
+
       if (role === 'CHARITY_ADMIN') {
         payload.charityName = charityName;
         payload.licenseNumber = licenseNumber;
@@ -66,7 +95,7 @@ export default function RegisterPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ? (isRtl ? 'فشل إنشاء الحساب.' : data.error) : t('registrationFailed'));
+        throw new Error(data.error ? (isRtl ? data.error : data.error) : t('registrationFailed'));
       }
 
       router.refresh();
@@ -202,6 +231,76 @@ export default function RegisterPage() {
               className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all"
             />
           </div>
+
+          {/* Donor & Beneficiary shared inputs: Phone and National ID */}
+          {(role === 'DONOR' || role === 'BENEFICIARY') && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                  {isRtl ? "رقم الهاتف" : "Phone Number"}
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder={isRtl ? "مثال: 01012345678" : "e.g. 01012345678"}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                  {isRtl ? "الرقم القومي (14 رقم)" : "14-Digit National ID"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  maxLength={14}
+                  value={nationalId}
+                  onChange={(e) => setNationalId(e.target.value)}
+                  placeholder="2990101XXXXXXXX"
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all font-mono"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Beneficiary-specific inputs: Address and Area Selection */}
+          {role === 'BENEFICIARY' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                  {isRtl ? "المنطقة السكنية" : "Geographical Area"}
+                </label>
+                <select
+                  value={areaName}
+                  onChange={(e) => setAreaName(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-850 text-sm focus:outline-none transition-all"
+                >
+                  {AREAS.map((a) => (
+                    <option key={a.name} value={a.name}>
+                      {isRtl ? a.nameAr : a.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ps-1">
+                  {isRtl ? "العنوان بالتفصيل" : "Exact Address"}
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder={isRtl ? "مثال: 5 شارع التحرير، الدور الثالث" : "e.g. 5 Tahrir St, 3rd floor"}
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-emerald-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 text-sm focus:outline-none transition-all"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Charity-specific inputs */}
           {role === 'CHARITY_ADMIN' && (

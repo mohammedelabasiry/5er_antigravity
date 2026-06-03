@@ -106,13 +106,27 @@ export default async function DonorDashboard() {
             </p>
           </div>
 
-          <div className="flex gap-3">
+          <div className={`flex flex-wrap gap-3 ${isRtl ? 'justify-end' : ''}`}>
             <Link
               href="/donor/map"
               className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md shadow-emerald-100 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
             >
               <MapPin className="w-4 h-4" />
               {t('discoverCases')}
+            </Link>
+            <Link
+              href="/donor/donate-charity"
+              className="px-5 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+            >
+              <Gift className="w-4 h-4 text-emerald-600" />
+              {t('btnDonateToCharity')}
+            </Link>
+            <Link
+              href="/donor/bulk-donate"
+              className="px-5 py-3 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+            >
+              <Coins className="w-4 h-4 text-emerald-600" />
+              {t('bulkDonation')}
             </Link>
           </div>
         </div>
