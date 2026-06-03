@@ -32,6 +32,8 @@ const onboardingTranslations = {
     generalAreaLabel: "General Location Area",
     neighborhoodCoords: "Neighborhood Coordinates",
     approxLocation: "Approximate Location",
+    showOnMapLabel: "Show my location and case on the public discovery map",
+    showOnMapDesc: "If enabled, donors can find your case approximately on the map. Your exact location is always hidden.",
     caseSummaryLabel: "Case Summary / Story (Describe your needs respectfully)",
     caseSummaryPlaceholder: "Write a brief, respectful summary of your family status, what you need support for (e.g. children school fees, rent assistance, medical prescriptions) without including private details.",
     step2Title: "Step 2: Private Verification Details",
@@ -88,6 +90,8 @@ const onboardingTranslations = {
     generalAreaLabel: "منطقة السكن العامة",
     neighborhoodCoords: "إحداثيات الحي السكني",
     approxLocation: "موقع تقريبي",
+    showOnMapLabel: "إظهار موقعي وحالتي على خريطة الاستكشاف العامة",
+    showOnMapDesc: "إذا تم التفعيل، يمكن للمتبرعين العثور على حالتك بشكل تقريبي على الخريطة. يظل موقعك الدقيق مخفياً دائماً.",
     caseSummaryLabel: "ملخص الحالة / القصة (يرجى شرح احتياجاتك بكرامة)",
     caseSummaryPlaceholder: "اكتب ملخصاً وجيزاً عن وضع أسرتك، وما تحتاج الدعم لأجله (مثل مصاريف المدارس، دعم الإيجار، الروشتات العلاجية) دون كتابة أي تفاصيل خاصة بك أو بعائلتك.",
     step2Title: "الخطوة 2: بيانات التحقق الخاصة",
@@ -148,6 +152,7 @@ export default function OnboardingForm() {
   const [displayName, setDisplayName] = useState(language === 'ar' ? 'حالة دعم أسري' : 'Family Support Case');
   const [caseSummary, setCaseSummary] = useState('');
   const [selectedAreaIndex, setSelectedAreaIndex] = useState(0);
+  const [showOnMap, setShowOnMap] = useState(true);
 
   const [fullName, setFullName] = useState('');
   const [nationalId, setNationalId] = useState('');
@@ -247,6 +252,7 @@ export default function OnboardingForm() {
           areaName: area.name,
           latitude: area.lat,
           longitude: area.lng,
+          showOnMap,
           fullName,
           nationalId,
           address,
@@ -386,6 +392,25 @@ export default function OnboardingForm() {
                   {ot('approxLocation')}
                 </span>
               </div>
+            </div>
+
+            {/* Map Visibility Toggle */}
+            <div className={`p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-start gap-3 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
+              <input
+                type="checkbox"
+                id="showOnMap"
+                checked={showOnMap}
+                onChange={(e) => setShowOnMap(e.target.checked)}
+                className="w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 mt-0.5 accent-emerald-600 cursor-pointer"
+              />
+              <label htmlFor="showOnMap" className="space-y-0.5 cursor-pointer select-none">
+                <span className="text-xs font-bold text-slate-800 block">
+                  {ot('showOnMapLabel')}
+                </span>
+                <span className="text-[11px] text-slate-500 block leading-normal">
+                  {ot('showOnMapDesc')}
+                </span>
+              </label>
             </div>
 
             <div className="space-y-1.5">

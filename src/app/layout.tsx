@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Cairo } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AudioPlayer from "@/components/AudioPlayer";
 import { getSession } from "@/lib/auth";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import { cookies } from "next/headers";
@@ -49,6 +50,7 @@ export default async function RootLayout({
           <Navbar user={session} />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
+          <AudioPlayer />
         </LanguageProvider>
       </body>
     </html>

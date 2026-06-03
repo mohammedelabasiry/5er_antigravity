@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
 import { ArrowLeft, Search, Heart, ArrowRight, MapPin } from 'lucide-react';
 import { BeneficiaryStatus } from '@prisma/client';
 

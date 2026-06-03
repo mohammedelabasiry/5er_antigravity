@@ -50,6 +50,25 @@ export async function PATCH(request: Request) {
       },
     });
 
+    // Sync associated contribution and update monthly caps
+    if (dist.contributionId) {
+      let contrStatus = 'PENDING';
+      if (deliveryStatus === 'DELIVERED') {
+        contrStatus = 'DELIVERED';
+      } else if (deliveryStatus === 'FAILED') {
+        contrStatus = 'REJECTED';
+      }
+
+      await prisma.contribution.update({
+        where: { id: dist.contributionId },
+        data: { status: contrStatus as any },
+      });
+
+      // Synchronize monthly cap totals
+      const { syncBeneficiaryCapStatus } = await import('@/lib/capLogic');
+      await syncBeneficiaryCapStatus(dist.beneficiaryProfileId);
+    }
+
     // 4. Log governance action
     await prisma.auditLog.create({
       data: {

@@ -32,7 +32,8 @@ export async function GET() {
       where: {
         status: {
           in: [BeneficiaryStatus.APPROVED, BeneficiaryStatus.FULLY_SUPPORTED_THIS_MONTH]
-        }
+        },
+        showOnMap: true,
       },
       select: {
         id: true,

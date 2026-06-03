@@ -3,7 +3,7 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { Role } from '@prisma/client';
 import { cookies } from 'next/headers';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
 import { 
   BarChart3, 
   ShieldCheck, 

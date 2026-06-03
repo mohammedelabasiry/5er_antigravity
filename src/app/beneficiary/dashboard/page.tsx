@@ -4,7 +4,8 @@ import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { getReceivedThisMonth } from '@/lib/capLogic';
 import { cookies } from 'next/headers';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
+import LocationSettings from './LocationSettings';
 import {
   Heart,
   ShieldCheck,
@@ -380,6 +381,12 @@ export default async function BeneficiaryDashboard() {
             )}
           </div>
         </div>
+
+        {/* Location & Map Privacy Settings */}
+        <LocationSettings
+          initialAreaName={profile.areaName}
+          initialShowOnMap={profile.showOnMap}
+        />
 
         {/* Notifications and Alerts box */}
         <div className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">

@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { getReceivedThisMonth } from '@/lib/capLogic';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
 import {
   ArrowLeft,
   MapPin,

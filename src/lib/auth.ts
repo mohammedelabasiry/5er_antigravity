@@ -53,7 +53,7 @@ export async function setSessionCookie(payload: SessionPayload) {
   const cookieStore = await cookies();
   cookieStore.set('session', token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: false, // Allow local testing over HTTP in production mode
     sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7, // 7 days
@@ -62,5 +62,9 @@ export async function setSessionCookie(payload: SessionPayload) {
 
 export async function clearSessionCookie() {
   const cookieStore = await cookies();
-  cookieStore.delete('session');
+  cookieStore.set('session', '', {
+    path: '/',
+    maxAge: 0,
+    expires: new Date(0),
+  });
 }

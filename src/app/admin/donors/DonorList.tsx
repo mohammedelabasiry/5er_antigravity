@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { UserCheck, UserX, Phone, Mail, Coins, Calendar } from 'lucide-react';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
 
 interface Donor {
   id: string;

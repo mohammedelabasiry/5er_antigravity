@@ -19,6 +19,7 @@ async function main() {
   await prisma.donorProfile.deleteMany();
   await prisma.charityProfile.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.resourceStock.deleteMany();
 
   console.log('Seeding admin...');
   const hashedPassword = bcrypt.hashSync('password123', 10);
@@ -385,6 +386,177 @@ async function main() {
     beneficiaries.push(profile);
   }
 
+  console.log('Generating 100 dynamic diverse beneficiaries...');
+  const firstNames = ['Ahmed', 'Fatma', 'Mohamed', 'Zainab', 'Mahmoud', 'Mona', 'Mustafa', 'Amina', 'Ali', 'Noha', 'Hassan', 'Yasmine', 'Tarek', 'Hala', 'Khaled', 'Rania', 'Sherif', 'Mai', 'Amr', 'Farida'];
+  const middleNames = ['Abdel-Rahman', 'Ali', 'Hassan', 'Mahmoud', 'Saeed', 'Omar', 'Mustafa', 'Ibrahim', 'El-Sayed', 'Soliman'];
+  const lastNames = ['Mansour', 'Salem', 'Hassan', 'El-Masry', 'Gomaa', 'Radwan', 'Khalil', 'Badawy', 'Amer', 'Soliman'];
+  
+  const AREAS = [
+    { name: 'Downtown Cairo', lat: 30.0444, lng: 31.2357 },
+    { name: 'Garden City', lat: 30.0360, lng: 31.2320 },
+    { name: 'Zamalek', lat: 30.0600, lng: 31.2200 },
+    { name: 'Dokki', lat: 30.0380, lng: 31.2110 },
+    { name: 'Mohandessin', lat: 30.0620, lng: 31.2030 },
+    { name: 'Giza', lat: 30.0130, lng: 31.2080 },
+    { name: 'Sayeda Zeinab', lat: 30.0290, lng: 31.2430 },
+    { name: 'Nasr City', lat: 30.0560, lng: 31.3300 },
+    { name: 'Heliopolis', lat: 30.0980, lng: 31.3200 },
+    { name: 'Maadi', lat: 29.9600, lng: 31.2600 },
+  ];
+
+  const caseScenarios = [
+    {
+      summary: 'Widow with school-aged children struggling with rent and expenses.',
+      medical: 'Hypertension, requires monthly prescription checks.',
+      employment: 'Sewing work from home (unstable)',
+      housing: 'Rented',
+      needs: 'School fees and monthly clothing.'
+    },
+    {
+      summary: 'Breadwinner injured in construction accident, unable to work.',
+      medical: 'Spinal disc injury, regular physical therapy.',
+      employment: 'Unemployed (Formerly laborer)',
+      housing: 'Shared flat',
+      needs: 'Support for therapy sessions and basic food.'
+    },
+    {
+      summary: 'Orphaned family managed by elder sister pursuing studies.',
+      medical: 'None',
+      employment: 'Student (Part-time cleaner)',
+      housing: 'Rented (Small room)',
+      needs: 'Rent support and monthly food box.'
+    },
+    {
+      summary: 'Elderly diabetic couple with no family support or pension.',
+      medical: 'Type 2 Diabetes, vision difficulties.',
+      employment: 'Retired',
+      housing: 'Owned (Old building)',
+      needs: 'Insulin pens and monthly food supplies.'
+    },
+    {
+      summary: 'Father working as street vendor with 5 family members, income insufficient.',
+      medical: 'Child suffers from asthma requiring inhalers.',
+      employment: 'Street vendor (Irregular)',
+      housing: 'Rented',
+      needs: 'Asthma medicine and children clothing.'
+    },
+    {
+      summary: 'Chronic heart patient unable to work, waiting for public hospital support.',
+      medical: 'Ischemic heart disease, daily medications.',
+      employment: 'Unemployed',
+      housing: 'Rented',
+      needs: 'Heart medication and basic utility bills support.'
+    }
+  ];
+
+  for (let i = 11; i <= 110; i++) {
+    const fName = firstNames[Math.floor(Math.random() * firstNames.length)];
+    const mName = middleNames[Math.floor(Math.random() * middleNames.length)];
+    const lName = lastNames[Math.floor(Math.random() * lastNames.length)];
+    const fullName = `${fName} ${mName} ${lName}`;
+    const displayName = `${fName}'s Family Case`;
+    const email = `ben${i}@gmail.com`;
+    const code = `KH-2026-${String(i).padStart(5, '0')}`;
+    const nationalId = `2${Math.floor(Math.random() * 80 + 10)}0${Math.floor(Math.random() * 8 + 1) + 1}0${Math.floor(Math.random() * 20 + 10)}010${Math.floor(Math.random() * 8000 + 1000)}`;
+    
+    // Choose area randomly
+    const area = AREAS[Math.floor(Math.random() * AREAS.length)];
+    // Random offset up to 1.5km
+    const latOffset = (Math.random() - 0.5) * 0.015;
+    const lngOffset = (Math.random() - 0.5) * 0.015;
+    const lat = area.lat + latOffset;
+    const lng = area.lng + lngOffset;
+
+    // Distribute category
+    const categories = ['A', 'B', 'C', 'D'];
+    const category = categories[Math.floor(Math.random() * categories.length)];
+    let monthlySupportCap = 1500;
+    let evalScore = 35;
+    if (category === 'A') { monthlySupportCap = 7000; evalScore = 90; }
+    else if (category === 'B') { monthlySupportCap = 5000; evalScore = 75; }
+    else if (category === 'C') { monthlySupportCap = 3000; evalScore = 55; }
+
+    // Choose status
+    const statusRand = Math.random();
+    let status: BeneficiaryStatus = BeneficiaryStatus.APPROVED;
+    let verificationStatus = 'APPROVED';
+    if (statusRand < 0.15) {
+      status = BeneficiaryStatus.PENDING_REVIEW;
+      verificationStatus = 'PENDING';
+    } else if (statusRand < 0.2) {
+      status = BeneficiaryStatus.DRAFT;
+      verificationStatus = 'PENDING';
+    } else if (statusRand < 0.25) {
+      status = BeneficiaryStatus.REJECTED;
+      verificationStatus = 'REJECTED';
+    }
+
+    // Set showOnMap: 85% of cases are shown on map
+    const showOnMap = Math.random() < 0.85;
+
+    // Family details
+    const scenario = caseScenarios[Math.floor(Math.random() * caseScenarios.length)];
+    const familyMembers = Math.floor(Math.random() * 6) + 2;
+    const children = Math.max(0, familyMembers - 2);
+    const income = Math.floor(Math.random() * 2000) + 500;
+    const debt = Math.random() > 0.5 ? Math.floor(Math.random() * 10000) + 1000 : 0;
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash: hashedPassword,
+        role: Role.BENEFICIARY,
+        name: fullName,
+      },
+    });
+
+    const profile = await prisma.beneficiaryProfile.create({
+      data: {
+        userId: user.id,
+        code,
+        displayName,
+        fullName,
+        nationalId,
+        category,
+        monthlySupportCap,
+        monthlyReceivedAmount: 0, // initially 0
+        caseSummary: scenario.summary,
+        areaName: area.name,
+        latitude: lat,
+        longitude: lng,
+        address: `${area.name}, Street ${Math.floor(Math.random() * 80) + 1}`,
+        phone: `+2010${Math.floor(Math.random() * 90000000 + 10000000)}`,
+        monthlyIncome: income,
+        familyMembersCount: familyMembers,
+        childrenCount: children,
+        employmentStatus: scenario.employment,
+        medicalConditions: scenario.medical,
+        housingStatus: scenario.housing,
+        debtObligations: debt,
+        urgentNeeds: scenario.needs,
+        status,
+        verificationStatus,
+        evaluationScore: evalScore,
+        showOnMap,
+      },
+    });
+
+    // Create verification document
+    await prisma.beneficiaryDocument.create({
+      data: {
+        beneficiaryProfileId: profile.id,
+        documentType: DocumentType.NATIONAL_ID,
+        fileUrl: `/private/documents/${profile.id}_national_id.jpg`,
+        fileName: 'national_id_front.jpg',
+        verified: verificationStatus === 'APPROVED',
+        verifiedAt: verificationStatus === 'APPROVED' ? new Date() : null,
+        verifiedById: verificationStatus === 'APPROVED' ? adminUser.id : null,
+      },
+    });
+    
+    beneficiaries.push(profile);
+  }
+
   console.log('Seeding contributions...');
   // Case 1: Fully Supported (Cap: 7000)
   // Donor 1 contributes 3000 EGP, Charity 1 contributes 4000 EGP
@@ -619,6 +791,17 @@ async function main() {
         message: 'You have received 2,000 EGP from a generous donor.',
         type: 'CONTRIBUTION_RECEIVED',
       },
+    ],
+  });
+
+  console.log('Seeding stock...');
+  await prisma.resourceStock.createMany({
+    data: [
+      { resourceType: 'Meat Distribution', quantity: 150, unit: 'kg' },
+      { resourceType: 'Food Box', quantity: 60, unit: 'units' },
+      { resourceType: 'Clothes', quantity: 45, unit: 'bags' },
+      { resourceType: 'Medicine', quantity: 30, unit: 'units' },
+      { resourceType: 'School Supplies', quantity: 25, unit: 'boxes' },
     ],
   });
 

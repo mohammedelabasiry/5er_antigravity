@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ShieldCheck, ShieldAlert, Globe, Phone, ExternalLink } from 'lucide-react';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
 
 interface Charity {
   id: string;

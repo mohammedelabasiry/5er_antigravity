@@ -109,6 +109,7 @@ model BeneficiaryProfile {
   status                BeneficiaryStatus @default(PENDING_REVIEW)
   evaluationScore       Float             @default(0)
   isEligibleOverride    Boolean           @default(false) // If true, can bypass cap limits
+  showOnMap             Boolean           @default(true)
   
   // Relations
   documents             BeneficiaryDocument[]
@@ -315,4 +316,12 @@ model Notification {
   isRead    Boolean  @default(false)
   type      String   // e.g. "SUPPORT_CAP", "DOCUMENT_VERIFIED", "CHAT"
   createdAt DateTime @default(now())
+}
+
+model ResourceStock {
+  id           String   @id @default(uuid())
+  resourceType String   @unique // e.g. "Meat", "Vegetables", "Clothes", etc.
+  quantity     Int      @default(0)
+  unit         String   // e.g. "kg", "units", "bags", "boxes"
+  updatedAt    DateTime @updatedAt
 }

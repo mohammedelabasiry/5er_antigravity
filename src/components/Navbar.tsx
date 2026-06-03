@@ -25,8 +25,7 @@ export default function Navbar({ user }: NavbarProps) {
     try {
       const res = await fetch('/api/auth/logout', { method: 'POST' });
       if (res.ok) {
-        router.refresh();
-        router.push('/login');
+        window.location.href = '/login';
       }
     } catch (error) {
       console.error('Failed to log out:', error);

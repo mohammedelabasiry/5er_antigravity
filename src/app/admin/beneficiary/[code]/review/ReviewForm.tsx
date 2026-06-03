@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CheckCircle, XCircle, Unlock, MessageSquare, ShieldCheck, ShieldAlert } from 'lucide-react';
-import { translations } from '@/lib/LanguageContext';
+import { translations } from '@/lib/translations';
 
 interface AdminNote {
   id: string;
