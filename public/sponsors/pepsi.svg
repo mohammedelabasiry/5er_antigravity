@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <circle cx="40" cy="40" r="38" fill="#004B93"/>
+  <circle cx="40" cy="40" r="20" fill="#E60012" opacity="0.9"/>
+  <circle cx="40" cy="40" r="12" fill="#004B93"/>
+  <path d="M28 40 A12 12 0 0 1 52 40" fill="#E60012"/>
+  <text x="40" y="44" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="12" fill="white">PEPSI</text>
+</svg>

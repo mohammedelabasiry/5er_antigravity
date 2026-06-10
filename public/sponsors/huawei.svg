@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <circle cx="40" cy="40" r="38" fill="#CF0A2C"/>
+  <text x="40" y="38" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="14" fill="white" letter-spacing="1">HUAWEI</text>
+  <path d="M28 46 C28 46 34 52 40 52 C46 52 52 46 52 46" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

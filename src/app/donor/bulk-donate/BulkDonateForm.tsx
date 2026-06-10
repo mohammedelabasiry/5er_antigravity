@@ -319,7 +319,7 @@ export default function BulkDonateForm() {
                 {/* Force override limit switch */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-500 uppercase tracking-wider block">
-                    {t('forceCapOverride')}
+                    {t('bulkForceCapOverride')}
                   </label>
                   <div className={`flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl h-[46px] ${isRtl ? 'flex-row-reverse justify-between' : 'justify-between'}`}>
                     <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider leading-none">

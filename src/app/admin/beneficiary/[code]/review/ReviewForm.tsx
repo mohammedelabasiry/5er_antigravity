@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle, XCircle, Unlock, MessageSquare, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { CheckCircle, XCircle, Unlock, MessageSquare, ShieldCheck, ShieldAlert, Brain, Sparkles } from 'lucide-react';
 import { translations } from '@/lib/translations';
 
 interface AdminNote {
@@ -17,6 +17,13 @@ interface ReviewFormProps {
   initialCategory: string;
   adminNotesHistory: AdminNote[];
   lang: 'en' | 'ar';
+  mlPrediction: {
+    score: number;
+    category: 'A' | 'B' | 'C' | 'D';
+    recommendedAmount: number;
+    probabilities: { A: number; B: number; C: number; D: number };
+    confidence: number;
+  };
 }
 
 export default function ReviewForm({
@@ -25,6 +32,7 @@ export default function ReviewForm({
   initialCategory,
   adminNotesHistory,
   lang,
+  mlPrediction,
 }: ReviewFormProps) {
   const router = useRouter();
   const isRtl = lang === 'ar';
@@ -61,6 +69,7 @@ export default function ReviewForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status,
+          category,
           monthlySupportCap: Number(monthlySupportCap),
           isEligibleOverride,
           noteText,
@@ -95,6 +104,102 @@ export default function ReviewForm({
           <span>{error}</span>
         </div>
       )}
+
+      {/* AI Model Assessment Card */}
+      <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-2xl p-5 space-y-4 shadow-sm border border-indigo-900 relative overflow-hidden">
+        {/* Decorative glowing background elements */}
+        <div className="absolute right-0 top-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div className="absolute left-0 bottom-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+        <div className={`flex items-center gap-2 border-b border-indigo-900/50 pb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
+          <Brain className="w-5 h-5 text-emerald-400 shrink-0 animate-pulse" />
+          <div className={isRtl ? 'text-right' : ''}>
+            <h4 className="text-xs font-bold tracking-wide uppercase text-indigo-200">
+              {t('aiAssessmentTitle')}
+            </h4>
+            <p className="text-[9px] text-slate-400">
+              Deep Learning Poverty Scoring (MLP Network)
+            </p>
+          </div>
+        </div>
+
+        <div className={`grid grid-cols-2 gap-4 text-xs ${isRtl ? 'text-right' : ''}`}>
+          <div>
+            <p className="text-[10px] text-indigo-300 font-medium">{t('aiCategoryPredict')}</p>
+            <p className="text-base font-extrabold text-emerald-400 mt-0.5">
+              {t('category')} {mlPrediction.category}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-indigo-300 font-medium">{t('aiAmountPredict')}</p>
+            <p className="text-base font-extrabold text-indigo-200 mt-0.5">
+              {mlPrediction.recommendedAmount} <span className="text-xs font-bold">{t('egp')}</span>
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-indigo-300 font-medium">{t('aiConfidence')}</p>
+            <p className="text-xs font-bold text-slate-200 mt-0.5">
+              {mlPrediction.confidence}%
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] text-indigo-300 font-medium">{t('score')}</p>
+            <p className="text-xs font-bold text-slate-200 mt-0.5">
+              {mlPrediction.score} / 100
+            </p>
+          </div>
+        </div>
+
+        {/* Probability bars */}
+        <div className="space-y-2 pt-1.5 border-t border-indigo-900/40">
+          <p className={`text-[9px] font-bold text-indigo-200 uppercase tracking-wider ${isRtl ? 'text-right' : ''}`}>
+            {isRtl ? 'احتماليات الفئات المستحقة' : 'Category Probability Distribution'}
+          </p>
+          <div className="space-y-1.5">
+            {(['A', 'B', 'C', 'D'] as const).map((cat) => {
+              const prob = mlPrediction.probabilities[cat];
+              const pct = Math.round(prob * 100);
+              
+              // Set custom color templates for progress bars
+              let barColor = 'bg-gradient-to-r from-rose-500 to-amber-500';
+              if (cat === 'B') barColor = 'bg-gradient-to-r from-amber-500 to-yellow-500';
+              if (cat === 'C') barColor = 'bg-gradient-to-r from-teal-500 to-emerald-500';
+              if (cat === 'D') barColor = 'bg-gradient-to-r from-slate-400 to-indigo-500';
+
+              let label = '';
+              if (cat === 'A') label = t('categoryA');
+              else if (cat === 'B') label = t('categoryB');
+              else if (cat === 'C') label = t('categoryC');
+              else if (cat === 'D') label = t('categoryD');
+
+              const catLabel = label.split(' - ')[0] || `Cat ${cat}`;
+
+              return (
+                <div key={cat} className="space-y-0.5">
+                  <div className={`flex justify-between text-[9px] font-medium text-slate-350 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                    <span>{catLabel}</span>
+                    <span>{pct}%</span>
+                  </div>
+                  <div className="w-full bg-slate-800/80 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`${barColor} h-full rounded-full transition-all duration-500`}
+                      style={{ width: `${pct}%` }}
+                    ></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Online training notification */}
+        <div className={`bg-indigo-950/80 border border-indigo-900/60 p-2.5 rounded-xl flex gap-1.5 items-start mt-2 ${isRtl ? 'flex-row-reverse text-right' : 'text-left'}`}>
+          <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
+          <p className="text-[9px] text-slate-400 leading-relaxed">
+            {t('aiLearningNote')}
+          </p>
+        </div>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         

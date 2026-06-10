@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <circle cx="40" cy="40" r="38" fill="#D71921"/>
+  <text x="40" y="36" text-anchor="middle" font-family="Georgia,Times,serif" font-size="11" fill="#C5A96A" font-weight="bold" letter-spacing="1">EMIRATES</text>
+  <line x1="20" y1="42" x2="60" y2="42" stroke="#C5A96A" stroke-width="1"/>
+  <text x="40" y="54" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" fill="white" letter-spacing="2">FLY BETTER</text>
+</svg>

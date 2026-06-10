@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
+  <circle cx="40" cy="40" r="38" fill="#0066B1"/>
+  <circle cx="40" cy="40" r="22" fill="none" stroke="white" stroke-width="3"/>
+  <text x="40" y="47" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="16" fill="white" letter-spacing="1">BMW</text>
+  <line x1="40" y1="18" x2="40" y2="62" stroke="white" stroke-width="2"/>
+  <line x1="18" y1="40" x2="62" y2="40" stroke="white" stroke-width="2"/>
+  <path d="M40 18 A22 22 0 0 1 62 40" fill="#00A3E0" opacity="0.5"/>
+  <path d="M18 40 A22 22 0 0 1 40 62" fill="#00A3E0" opacity="0.5"/>
+</svg>

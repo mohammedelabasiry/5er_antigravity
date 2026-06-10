@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AudioPlayer from "@/components/AudioPlayer";
+import SponsorsSides from "@/components/SponsorsSides";
 import { getSession } from "@/lib/auth";
 import { LanguageProvider } from "@/lib/LanguageContext";
 import { cookies } from "next/headers";
@@ -48,6 +49,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col bg-slate-50/50 text-slate-900 font-sans">
         <LanguageProvider>
           <Navbar user={session} />
+          <SponsorsSides />
           <main className="flex-1 flex flex-col">{children}</main>
           <Footer />
           <AudioPlayer />

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { syncBeneficiaryCapStatus } from '@/lib/capLogic';
+import { povertyModel } from '@/lib/mlEvaluation';
 import { BeneficiaryStatus } from '@prisma/client';
 
 export async function PATCH(
@@ -17,7 +18,7 @@ export async function PATCH(
 
     const beneficiaryId = params.id;
     const body = await request.json();
-    const { status, monthlySupportCap, isEligibleOverride, noteText } = body;
+    const { status, category, monthlySupportCap, isEligibleOverride, noteText } = body;
 
     const profile = await prisma.beneficiaryProfile.findUnique({
       where: { id: beneficiaryId },
@@ -38,6 +39,10 @@ export async function PATCH(
         } else if (status === BeneficiaryStatus.REJECTED) {
           dataToUpdate.verificationStatus = 'REJECTED';
         }
+      }
+
+      if (category) {
+        dataToUpdate.category = category;
       }
       
       if (typeof monthlySupportCap === 'number') {
@@ -93,6 +98,29 @@ export async function PATCH(
           details: `Admin ${session.name} updated beneficiary code ${profile.code}. Changes: ${JSON.stringify(dataToUpdate)}. Note: ${noteText || 'N/A'}`,
         },
       });
+
+      // Teach the AI model from this admin decision (online learning)
+      const targetCategory = category || p.category;
+      const targetAmount = typeof monthlySupportCap === 'number' ? monthlySupportCap : p.monthlySupportCap;
+      try {
+        povertyModel.trainStep(
+          {
+            monthlyIncome: profile.monthlyIncome,
+            familyMembersCount: profile.familyMembersCount,
+            childrenCount: profile.childrenCount,
+            employmentStatus: profile.employmentStatus,
+            medicalConditions: profile.medicalConditions,
+            housingStatus: profile.housingStatus,
+            debtObligations: profile.debtObligations,
+            urgentNeeds: profile.urgentNeeds,
+            existingSupport: profile.existingSupport,
+          },
+          targetCategory as 'A' | 'B' | 'C' | 'D',
+          targetAmount
+        );
+      } catch (err) {
+        console.error('AI model training step failed:', err);
+      }
 
       return p;
     });

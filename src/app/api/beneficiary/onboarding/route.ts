@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { calculateScoreAndCategory } from '@/lib/evaluation';
+import { povertyModel } from '@/lib/mlEvaluation';
 import { BeneficiaryStatus, DocumentType } from '@prisma/client';
 
 export async function POST(request: Request) {
@@ -63,8 +64,8 @@ export async function POST(request: Request) {
       code = `KH-2026-${String(count + 1).padStart(5, '0')}`;
     }
 
-    // Perform poverty evaluation score calculation
-    const evaluation = calculateScoreAndCategory({
+    // Perform poverty evaluation score calculation using AI Deep Learning Model
+    const mlEvaluation = povertyModel.predict({
       monthlyIncome: Number(monthlyIncome) || 0,
       familyMembersCount: Number(familyMembersCount) || 1,
       childrenCount: Number(childrenCount) || 0,
@@ -83,8 +84,8 @@ export async function POST(request: Request) {
         displayName,
         fullName,
         nationalId,
-        category: evaluation.category,
-        monthlySupportCap: evaluation.recommendedAmount,
+        category: mlEvaluation.category,
+        monthlySupportCap: mlEvaluation.recommendedAmount,
         monthlyReceivedAmount: 0,
         caseSummary,
         areaName,
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
         debtObligations: Number(debtObligations) || 0,
         urgentNeeds: urgentNeeds || '',
         existingSupport: Number(existingSupport) || 0,
-        evaluationScore: evaluation.score,
+        evaluationScore: mlEvaluation.score,
         status: BeneficiaryStatus.PENDING_REVIEW,
         verificationStatus: 'PENDING',
       };
@@ -122,14 +123,14 @@ export async function POST(request: Request) {
         });
       }
 
-      // 2. Log Evaluation History
+      // 2. Log Evaluation History (using ML output)
       await tx.evaluation.create({
         data: {
           beneficiaryProfileId: newProfile.id,
-          score: evaluation.score,
-          recommendedCategory: evaluation.category,
-          recommendedAmount: evaluation.recommendedAmount,
-          adminNotes: 'Algorithmic assessment upon profile creation.',
+          score: mlEvaluation.score,
+          recommendedCategory: mlEvaluation.category,
+          recommendedAmount: mlEvaluation.recommendedAmount,
+          adminNotes: `AI Deep Learning model assessment upon profile creation. Confidence: ${mlEvaluation.confidence}%.`,
         },
       });
 
@@ -152,7 +153,7 @@ export async function POST(request: Request) {
         data: {
           userId: session.userId,
           action: 'BENEFICIARY_ONBOARDED',
-          details: `Profile ${code} onboarded. Score: ${evaluation.score}, Category: ${evaluation.category}, Target: ${evaluation.recommendedAmount} EGP`,
+          details: `Profile ${code} onboarded. AI Score: ${mlEvaluation.score}, AI Category: ${mlEvaluation.category}, AI Target: ${mlEvaluation.recommendedAmount} EGP (Confidence: ${mlEvaluation.confidence}%)`,
         },
       });
 

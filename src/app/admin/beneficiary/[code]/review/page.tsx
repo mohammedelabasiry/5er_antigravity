@@ -14,6 +14,7 @@ import {
   Download,
 } from 'lucide-react';
 import ReviewForm from './ReviewForm';
+import { povertyModel } from '@/lib/mlEvaluation';
 
 export const dynamic = 'force-dynamic';
 
@@ -73,6 +74,19 @@ export default async function BeneficiaryReviewPage(
     );
   }
 
+  // Generate real-time AI Prediction assessment for display
+  const mlPrediction = povertyModel.predict({
+    monthlyIncome: profile.monthlyIncome,
+    familyMembersCount: profile.familyMembersCount,
+    childrenCount: profile.childrenCount,
+    employmentStatus: profile.employmentStatus,
+    medicalConditions: profile.medicalConditions,
+    housingStatus: profile.housingStatus,
+    debtObligations: profile.debtObligations,
+    urgentNeeds: profile.urgentNeeds,
+    existingSupport: profile.existingSupport,
+  });
+
   return (
     <div className={`flex-1 bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="max-w-5xl mx-auto space-y-6">
@@ -126,7 +140,7 @@ export default async function BeneficiaryReviewPage(
                 </div>
                 <div className={isRtl ? 'text-right' : ''}>
                   <p className="text-[10px] text-slate-400 font-bold uppercase">{t('caseStoryLabel')}</p>
-                  <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
+                  <p className="text-xs text-slate-650 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
                     {profile.caseSummary}
                   </p>
                 </div>
@@ -251,6 +265,7 @@ export default async function BeneficiaryReviewPage(
                 initialCategory={profile.category}
                 adminNotesHistory={profile.adminNotes}
                 lang={lang}
+                mlPrediction={mlPrediction}
               />
             </div>
           </div>

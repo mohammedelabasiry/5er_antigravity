@@ -15,8 +15,10 @@ import {
   TrendingUp,
   MessageSquare,
   Edit3,
+  Brain,
 } from 'lucide-react';
 import { BeneficiaryStatus } from '@prisma/client';
+import { povertyModel } from '@/lib/mlEvaluation';
 
 export const dynamic = 'force-dynamic';
 
@@ -96,6 +98,19 @@ export default async function BeneficiaryDetailsPage(
     }
   };
 
+  // Run AI model prediction for details card
+  const mlPrediction = povertyModel.predict({
+    monthlyIncome: profile.monthlyIncome,
+    familyMembersCount: profile.familyMembersCount,
+    childrenCount: profile.childrenCount,
+    employmentStatus: profile.employmentStatus,
+    medicalConditions: profile.medicalConditions,
+    housingStatus: profile.housingStatus,
+    debtObligations: profile.debtObligations,
+    urgentNeeds: profile.urgentNeeds,
+    existingSupport: profile.existingSupport,
+  });
+
   return (
     <div className={`flex-1 bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8 ${isRtl ? 'text-right' : 'text-left'}`}>
       <div className="max-w-6xl mx-auto space-y-6">
@@ -160,7 +175,7 @@ export default async function BeneficiaryDetailsPage(
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-400 font-bold uppercase">{t('generalNeighborhood')}</p>
-                  <p className="font-semibold text-slate-750 mt-0.5">{profile.areaName}</p>
+                  <p className="font-semibold text-slate-755 mt-0.5">{profile.areaName}</p>
                 </div>
               </div>
               <div className={isRtl ? 'text-right' : ''}>
@@ -185,7 +200,7 @@ export default async function BeneficiaryDetailsPage(
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-400">{t('nationalId')}</p>
-                  <p className="font-semibold font-mono text-slate-850 mt-0.5">{profile.nationalId}</p>
+                  <p className="font-semibold font-mono text-slate-855 mt-0.5">{profile.nationalId}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-400">{t('phone')}</p>
@@ -342,6 +357,47 @@ export default async function BeneficiaryDetailsPage(
               </div>
             </div>
 
+            {/* AI Model Summary Card */}
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-950 text-white border border-indigo-900 rounded-3xl p-6 shadow-md space-y-4 relative overflow-hidden">
+              <div className="absolute right-0 top-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
+              <div className="absolute left-0 bottom-0 w-24 h-24 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+
+              <h3 className={`font-bold text-slate-100 text-sm flex items-center gap-1.5 pb-2 border-b border-indigo-900/50 ${isRtl ? 'flex-row-reverse' : ''}`}>
+                <Brain className="text-emerald-400 w-4.5 h-4.5 shrink-0 animate-pulse" />
+                {t('aiAssessmentTitle')}
+              </h3>
+
+              <div className="space-y-3 text-xs">
+                <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-indigo-200">{t('aiCategoryPredict')}</span>
+                  <span className="font-extrabold text-emerald-400 text-sm">
+                    {t('category')} {mlPrediction.category}
+                  </span>
+                </div>
+                
+                <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-indigo-200">{t('aiAmountPredict')}</span>
+                  <span className="font-extrabold text-indigo-100 text-sm">
+                    {mlPrediction.recommendedAmount} {t('egp')}
+                  </span>
+                </div>
+
+                <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-indigo-200">{t('aiConfidence')}</span>
+                  <span className="font-bold text-slate-200">
+                    {mlPrediction.confidence}%
+                  </span>
+                </div>
+
+                <div className={`flex justify-between items-center ${isRtl ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-indigo-200">{t('score')}</span>
+                  <span className="font-bold text-slate-200">
+                    {mlPrediction.score} / 100
+                  </span>
+                </div>
+              </div>
+            </div>
+
             {/* Admin Audit notes history */}
             <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-3">
               <h3 className={`font-bold text-slate-800 text-sm flex items-center gap-2 border-b border-slate-50 pb-2 ${isRtl ? 'flex-row-reverse' : ''}`}>
@@ -349,7 +405,7 @@ export default async function BeneficiaryDetailsPage(
                 {t('auditLogsComments')}
               </h3>
               {profile.adminNotes.length === 0 ? (
-                <p className="text-xs text-slate-400 py-3 text-center">{t('noNotesLogged')}</p>
+                <p className="text-xs text-slate-405 py-3 text-center">{t('noNotesLogged')}</p>
               ) : (
                 <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                   {profile.adminNotes.map((note) => (
