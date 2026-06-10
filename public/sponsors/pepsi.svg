@@ -1,7 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none">
-  <circle cx="40" cy="40" r="38" fill="#004B93"/>
-  <circle cx="40" cy="40" r="20" fill="#E60012" opacity="0.9"/>
-  <circle cx="40" cy="40" r="12" fill="#004B93"/>
-  <path d="M28 40 A12 12 0 0 1 52 40" fill="#E60012"/>
-  <text x="40" y="44" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="900" font-size="12" fill="white">PEPSI</text>
+<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pepsi" viewBox="0 0 512 512" preserveAspectRatio="xMidYMid meet">
+<title>Pepsi</title>
+<defs>
+<clipPath id="pepsiClip"><circle cx="256" cy="256" r="232"/></clipPath>
+</defs>
+<circle cx="256" cy="256" r="244" fill="#fff"/>
+<g clip-path="url(#pepsiClip)">
+<rect width="512" height="256" fill="#E32934"/>
+<rect y="256" width="512" height="256" fill="#004B93"/>
+<path d="M-40 240C72 176 170 176 256 216c104 49 202 43 296-18v114c-126 76-237 78-332 25C132 288 48 293-40 360Z" fill="#fff"/>
+</g>
+<circle cx="256" cy="256" r="232" fill="none" stroke="#fff" stroke-width="24"/>
+<circle cx="256" cy="256" r="244" fill="none" stroke="#004B93" stroke-width="4" opacity=".18"/>
 </svg>

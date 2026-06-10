@@ -1,0 +1,24 @@
+Sponsors SVG package - v2 corrected/high-fidelity.
+All requested logo files are SVG and keep the same filenames.
+SVG is vector, so it scales without pixelation. Some logos are trademarked; use according to brand guidelines.
+
+adidas.svg - Simple Icons Adidas - brand vector
+amazon.svg - Simple Icons Amazon - brand vector
+apple.svg - Iconify logos:apple - Apple mark
+bmw.svg - Custom vector recreation of BMW roundel colors
+cocacola.svg - Simple Icons Coca-Cola - brand vector
+emirates.svg - Simple Icons Emirates - brand vector
+etisalat.svg - Custom vector text lockup for Etisalat by e&
+google.svg - Iconify logos:google - colored Google wordmark
+huawei.svg - Simple Icons Huawei - brand vector
+mastercard.svg - Iconify logos:mastercard - colored Mastercard logo
+microsoft.svg - Iconify logos:microsoft-icon - colored Microsoft symbol
+nike.svg - Simple Icons Nike - brand vector
+pepsi.svg - Custom vector recreation of Pepsi globe colors
+samsung.svg - Iconify logos:samsung - Samsung wordmark
+tesla.svg - Simple Icons Tesla - brand vector
+toyota.svg - Simple Icons Toyota - brand vector
+uber.svg - Simple Icons Uber - brand vector
+visa.svg - Iconify logos:visa - colored Visa logo
+vodafone.svg - Simple Icons Vodafone - brand vector
+zara.svg - Simple Icons Zara - brand vector
